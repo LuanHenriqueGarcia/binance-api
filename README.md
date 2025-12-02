@@ -17,6 +17,18 @@ Para endpoints públicos, pode deixar as chaves em branco.
  A aplicação responde em `http://localhost:8000`.
 - Em Apache, habilite `mod_rewrite` e use o `.htaccess` já incluso.
 
+
+## Como usar no Insomnia
+1) Abra o Insomnia → Application → Import/Export → Import Data → From File.
+2) Selecione `insomnia.json` na raiz do projeto (já contém todas as rotas).
+3) No Insomnia, abra o ambiente (canto superior esquerdo):
+   - `base_url`: ex. http://localhost:8000
+   - `api_key` / `secret_key`: suas chaves da Binance (ou deixe vazio para endpoints públicos).
+4) Rode o servidor local:
+   php -S localhost:8000 -t .
+5) Teste as rotas pela coleção importada (General, Market, Account, Trading). As rotas de conta/trading exigem chaves.
+
+
 ## Endpoints rápidos
 - Ping: `GET /api/general/ping`
 - Hora do servidor: `GET /api/general/time`

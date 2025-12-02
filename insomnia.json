@@ -1,0 +1,176 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-12-02T00:00:00.000Z",
+  "__export_source": "codex-cli",
+  "resources": [
+    {
+      "_id": "wrk_binance_api",
+      "_type": "workspace",
+      "name": "Binance API PHP",
+      "description": "Coleção de endpoints da API REST Binance em PHP"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_binance_api",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8000"
+      }
+    },
+
+    { "_id": "fld_general", "_type": "request_group", "parentId": "wrk_binance_api", "name": "General" },
+    {
+      "_id": "req_ping",
+      "_type": "request",
+      "parentId": "fld_general",
+      "name": "Ping",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/general/ping"
+    },
+    {
+      "_id": "req_time",
+      "_type": "request",
+      "parentId": "fld_general",
+      "name": "Server Time",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/general/time"
+    },
+    {
+      "_id": "req_exchange",
+      "_type": "request",
+      "parentId": "fld_general",
+      "name": "Exchange Info (symbol)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/general/exchange-info",
+      "parameters": [{ "name": "symbol", "value": "BTCUSDT" }]
+    },
+
+    { "_id": "fld_market", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Market" },
+    {
+      "_id": "req_ticker",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Ticker Price",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/ticker",
+      "parameters": [{ "name": "symbol", "value": "BTCUSDT" }]
+    },
+    {
+      "_id": "req_orderbook",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Order Book",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/order-book",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "100" }
+      ]
+    },
+    {
+      "_id": "req_trades",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Recent Trades",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/trades",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "500" }
+      ]
+    },
+
+    { "_id": "fld_account", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Account (auth)" },
+    {
+      "_id": "req_account_info",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Account Info",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/info",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false }
+      ]
+    },
+    {
+      "_id": "req_open_orders",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Open Orders",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/open-orders",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "symbol", "value": "BTCUSDT" }
+      ]
+    },
+    {
+      "_id": "req_order_history",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Order History",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/order-history",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "500" }
+      ]
+    },
+    {
+      "_id": "req_balance",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Asset Balance",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/balance",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "asset", "value": "USDT" }
+      ]
+    },
+
+    { "_id": "fld_trading", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Trading (auth)" },
+    {
+      "_id": "req_create_order",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Create Order",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/trading/create-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"quantity\": \"0.001\",\n  \"price\": \"42000\"\n}"
+      }
+    },
+    {
+      "_id": "req_cancel_order",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Cancel Order",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/trading/cancel-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"orderId\": \"123456\"\n}"
+      }
+    },
+
+    {
+      "_id": "env_secrets",
+      "_type": "environment",
+      "parentId": "env_base",
+      "name": "Local Secrets",
+      "data": {
+        "api_key": "",
+        "secret_key": ""
+      }
+    }
+  ]
+}

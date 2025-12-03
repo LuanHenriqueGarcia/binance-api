@@ -34,6 +34,22 @@ class TradingControllerTest extends TestCase
         $this->assertStringContainsString('type', $response['error']);
     }
 
+    public function testRejectsInvalidSide(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'HOLD',
+            'type' => 'LIMIT',
+            'quantity' => '1',
+            'price' => '10'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('side', $response['error']);
+    }
+
     public function testMarketRequiresQuantityOrQuote(): void
     {
         $response = $this->controller->createOrder([

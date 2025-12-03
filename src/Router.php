@@ -6,6 +6,8 @@ use BinanceAPI\Controllers\GeneralController;
 use BinanceAPI\Controllers\MarketController;
 use BinanceAPI\Controllers\AccountController;
 use BinanceAPI\Controllers\TradingController;
+use BinanceAPI\Config;
+use BinanceAPI\RateLimiter;
 
 class Router
 {
@@ -13,6 +15,7 @@ class Router
     private string $path;
     /** @var array<string,mixed> */
     private array $params;
+    private RateLimiter $rateLimiter;
 
     /**
      * @param string|null $method Método HTTP (override para testes)
@@ -24,6 +27,7 @@ class Router
         $this->method = $method ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET');
         $this->path = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         $this->params = $params ?? $this->parseParams();
+        $this->rateLimiter = new RateLimiter();
     }
 
     /**
@@ -51,6 +55,10 @@ class Router
      */
     public function dispatch(): void
     {
+        if (!$this->checkAuth()) {
+            return;
+        }
+
         $pathParts = array_filter(explode('/', $this->path));
         $pathParts = array_values($pathParts);
 
@@ -66,6 +74,10 @@ class Router
 
         $endpoint = $pathParts[0] ?? null;
         $action = $pathParts[1] ?? null;
+
+        if ($this->isRateLimited($endpoint)) {
+            return;
+        }
 
         match ($endpoint) {
             'general' => $this->handleGeneral($action),
@@ -170,5 +182,51 @@ class Router
             'success' => false,
             'error' => $message
         ], JSON_PRETTY_PRINT);
+    }
+
+    private function checkAuth(): bool
+    {
+        $user = Config::getAuthUser();
+        $pass = Config::getAuthPassword();
+
+        if (!$user || !$pass) {
+            return true;
+        }
+
+        $inputUser = $_SERVER['PHP_AUTH_USER'] ?? null;
+        $inputPass = $_SERVER['PHP_AUTH_PW'] ?? null;
+
+        if ($inputUser === $user && $inputPass === $pass) {
+            return true;
+        }
+
+        header('WWW-Authenticate: Basic realm="Restricted"');
+        $this->sendError('Não autorizado', 401);
+        return false;
+    }
+
+    private function isRateLimited(?string $endpoint): bool
+    {
+        $enabled = (bool)Config::get('RATE_LIMIT_ENABLED', false);
+        if (!$enabled) {
+            return false;
+        }
+
+        if (!in_array($endpoint, ['account', 'trading'], true)) {
+            return false;
+        }
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
+        $routeKey = $endpoint . ':' . ($this->method ?? 'GET') . ':' . $ip;
+        $hit = $this->rateLimiter->hit($routeKey);
+
+        if (!$hit['allowed']) {
+            $retry = $hit['retryAfter'] ?? 1;
+            header('Retry-After: ' . $retry);
+            $this->sendError('Rate limit excedido. Tente novamente em ' . $retry . 's', 429);
+            return true;
+        }
+
+        return false;
     }
 }

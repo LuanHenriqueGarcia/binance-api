@@ -4,6 +4,8 @@ namespace BinanceAPI\Controllers;
 
 use BinanceAPI\BinanceClient;
 use BinanceAPI\Validation;
+use BinanceAPI\Cache;
+use BinanceAPI\Config;
 
 class GeneralController
 {
@@ -59,6 +61,18 @@ class GeneralController
     public function exchangeInfo(array $params): array
     {
         try {
+            $cache = new Cache();
+            $ttl = (int)Config::get('CACHE_EXCHANGEINFO_TTL', 30);
+            $cacheKey = 'exchangeInfo:' . md5(json_encode($params));
+
+            if ($cached = $cache->get($cacheKey, $ttl)) {
+                return [
+                    'success' => true,
+                    'data' => $cached,
+                    'cached' => true
+                ];
+            }
+
             $client = new BinanceClient();
 
             $options = [];
@@ -71,6 +85,10 @@ class GeneralController
             }
 
             $response = $client->get('/api/v3/exchangeInfo', $options);
+
+            if (!isset($response['success']) || $response['success'] !== false) {
+                $cache->set($cacheKey, $response);
+            }
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {

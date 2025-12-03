@@ -4,8 +4,9 @@
 
 ## Configuração
 1. Clone ou baixe o projeto.
-2. Crie um arquivo `.env` na raiz (ou edite o existente). Para endpoints públicos, pode deixar as chaves em branco.
+2. Crie um arquivo `.env` na raiz (ou edite o existente). Para endpoints públicos, pode deixar as chaves em branco. Use `.env.example` como base.
 3. (Opcional) Rode `composer install` para gerar `vendor/autoload.php` e instalar ferramentas de dev.
+4. (Produção) Gere autoload otimizado: `composer dumpautoload -o`.
 
 ## Como rodar localmente
 - Usando o servidor embutido do PHP:
@@ -19,10 +20,15 @@
 1) Abra o Insomnia → Application → Import/Export → Import Data → From File.  
 2) Selecione `insomnia.json` na raiz do projeto (já contém todas as rotas).  
 3) No ambiente do Insomnia:
-   - `base_url`: ex. http://localhost:8000
-   - `api_key` / `secret_key`: suas chaves da Binance (ou deixe vazio para endpoints públicos).
-   - `BINANCE_BASE_URL` (opcional): override da base (ex.: https://testnet.binance.vision). Ou use `BINANCE_TESTNET=true`.
-   - `BINANCE_SSL_VERIFY` (opcional): `false` para ignorar certificado em ambiente local (não use em produção).
+- `base_url`: ex. http://localhost:8000
+- `api_key` / `secret_key`: suas chaves da Binance (ou deixe vazio para endpoints públicos).
+- `BINANCE_BASE_URL` (opcional): override da base (ex.: https://testnet.binance.vision). Ou use `BINANCE_TESTNET=true`.
+- `BINANCE_SSL_VERIFY` (opcional): `false` para ignorar certificado em ambiente local (não use em produção).
+- `BINANCE_CA_BUNDLE` (opcional): caminho para um bundle de CA customizado (mantém verificação SSL).
+- `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` (opcional): protege todas as rotas com Basic Auth.
+- `RATE_LIMIT_ENABLED` (opcional): `true` para habilitar limitador em account/trading. Ajuste `RATE_LIMIT_MAX` e `RATE_LIMIT_WINDOW` (segundos).
+- `APP_LOG_FILE` (opcional): caminho para arquivo de log JSON (somente loga em debug).
+- `CACHE_EXCHANGEINFO_TTL` (opcional): TTL em segundos do cache de `/exchangeInfo` (default 30s).
 4) Rode o servidor local: `php -S localhost:8000 -t .`  
 5) Teste as rotas (General, Market, Account, Trading). Endpoints de conta/trading exigem chaves.
 
@@ -64,5 +70,5 @@ curl -X DELETE http://localhost:8000/api/trading/cancel-order ^
 - STOP/TAKE (com ou sem LIMIT): inclua `stopPrice`.
 
 ## Testes e qualidade
-- Rodar testes (PHPUnit): `vendor/bin/phpunit` (controllers e router)
+- Rodar testes (PHPUnit): `vendor/bin/phpunit` (controllers, router e helpers)
 - Análise estática (PHPStan nível 6): `vendor/bin/phpstan analyse`

@@ -1,10 +1,16 @@
 <?php
 
 use BinanceAPI\Router;
+use BinanceAPI\Config;
 use PHPUnit\Framework\TestCase;
 
 class RouterTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::fake([]);
+    }
+
     public function testSendResponseSuccessSets200(): void
     {
         $router = new Router('GET', '/test', []);
@@ -30,6 +36,76 @@ class RouterTest extends TestCase
 
         $this->assertSame(429, http_response_code());
         $this->assertStringContainsString('"code": 429', $output);
+    }
+
+    public function testAuthRequired(): void
+    {
+        Config::fake([
+            'BASIC_AUTH_USER' => 'u',
+            'BASIC_AUTH_PASSWORD' => 'p'
+        ]);
+
+        $_SERVER['PHP_AUTH_USER'] = null;
+        $_SERVER['PHP_AUTH_PW'] = null;
+
+        $router = new Router('GET', '/api/general/ping', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(401, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertFalse($decoded['success']);
+        $this->assertSame('Não autorizado', $decoded['error']);
+    }
+
+    public function testAuthPasses(): void
+    {
+        Config::fake([
+            'BASIC_AUTH_USER' => 'u',
+            'BASIC_AUTH_PASSWORD' => 'p'
+        ]);
+
+        $_SERVER['PHP_AUTH_USER'] = 'u';
+        $_SERVER['PHP_AUTH_PW'] = 'p';
+
+        $router = new Router('GET', '/', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(200, http_response_code());
+        $this->assertStringContainsString('Binance API REST', $output);
+    }
+
+    public function testDispatchRootReturnsMessage(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(200, http_response_code());
+        $this->assertStringContainsString('Binance API REST', $output);
+    }
+
+    public function testDispatchUnknownReturns404(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/unknown', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertFalse($decoded['success']);
+        $this->assertSame('Endpoint não encontrado', $decoded['error']);
     }
 
     /**

@@ -15,6 +15,7 @@ class BinanceClient
     private ?string $secretKey = null;
     private string $baseUrl;
     private bool $verifySsl;
+    private ?string $caBundle = null;
 
     /**
      * Construtor
@@ -27,7 +28,8 @@ class BinanceClient
         $this->apiKey = $apiKey;
         $this->secretKey = $secretKey;
         $this->baseUrl = Config::getBinanceBaseUrl() ?: self::BASE_URL;
-        $this->verifySsl = Config::get('BINANCE_SSL_VERIFY', 'true') === 'true';
+        $this->verifySsl = Config::shouldVerifySsl();
+        $this->caBundle = Config::getCaBundle();
     }
 
     /**
@@ -118,9 +120,11 @@ class BinanceClient
      */
     private function request(string $method, string $url, ?string $body = null): array
     {
+        $start = microtime(true);
         for ($attempt = 0; $attempt <= self::MAX_RETRIES; $attempt++) {
             $ch = curl_init();
 
+            $responseHeaders = [];
             $options = [
                 CURLOPT_URL => $url,
                 CURLOPT_CUSTOMREQUEST => $method,
@@ -129,7 +133,19 @@ class BinanceClient
                 CURLOPT_HTTPHEADER => $this->getHeaders($body !== null),
                 CURLOPT_SSL_VERIFYPEER => $this->verifySsl,
                 CURLOPT_SSL_VERIFYHOST => $this->verifySsl ? 2 : 0,
+                CURLOPT_HEADERFUNCTION => function ($ch, $header) use (&$responseHeaders) {
+                    $len = strlen($header);
+                    $parts = explode(':', $header, 2);
+                    if (count($parts) === 2) {
+                        $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                    }
+                    return $len;
+                },
             ];
+
+            if ($this->caBundle && file_exists($this->caBundle)) {
+                $options[CURLOPT_CAINFO] = $this->caBundle;
+            }
 
             if ($body !== null) {
                 $options[CURLOPT_POSTFIELDS] = $body;
@@ -144,19 +160,22 @@ class BinanceClient
             curl_close($ch);
 
             if ($error || $response === false) {
+                $this->logRequest($method, $url, $httpCode ?? 0, $attempt, $start, $responseHeaders, $error ?: 'Resposta vazia');
                 return [
                     'success' => false,
                     'error' => 'Erro de conexão: ' . ($error ?: 'Resposta vazia')
                 ];
             }
 
+            $retryAfterMs = $this->getRetryAfterMs($responseHeaders);
             if ($this->shouldRetry($httpCode, $attempt)) {
-                $this->backoff($attempt);
+                $this->backoff($attempt, $retryAfterMs);
                 continue;
             }
 
             if ($httpCode >= 400) {
                 $decoded = json_decode($response, true);
+                $this->logRequest($method, $url, $httpCode, $attempt, $start, $responseHeaders, $decoded['msg'] ?? 'Erro HTTP ' . $httpCode);
                 return [
                     'success' => false,
                     'error' => $decoded['msg'] ?? 'Erro HTTP ' . $httpCode,
@@ -167,12 +186,14 @@ class BinanceClient
             $decoded = json_decode($response, true);
 
             if ($decoded === null && $response !== '') {
+                $this->logRequest($method, $url, $httpCode, $attempt, $start, $responseHeaders, 'Resposta inválida');
                 return [
                     'success' => false,
                     'error' => 'Resposta inválida: ' . $response
                 ];
             }
 
+            $this->logRequest($method, $url, $httpCode, $attempt, $start, $responseHeaders, null);
             return $decoded ?? [];
         }
 
@@ -217,9 +238,62 @@ class BinanceClient
         return $httpCode >= 500 && $httpCode < 600;
     }
 
-    private function backoff(int $attempt): void
+    private function backoff(int $attempt, ?int $retryAfterMs = null): void
     {
-        $delayMs = self::RETRY_DELAY_MS * ($attempt + 1);
+        $base = $retryAfterMs ?? (self::RETRY_DELAY_MS * ($attempt + 1));
+        // jitter 50%-150%
+        $delayMs = (int) ($base * (random_int(50, 150) / 100));
         usleep($delayMs * 1000);
+    }
+
+    /**
+     * @param array<string,string> $headers
+     */
+    private function getRetryAfterMs(array $headers): ?int
+    {
+        if (!isset($headers['retry-after'])) {
+            return null;
+        }
+
+        $value = $headers['retry-after'];
+        if (is_numeric($value)) {
+            return (int)$value * 1000;
+        }
+
+        $timestamp = strtotime($value);
+        if ($timestamp !== false) {
+            $delta = ($timestamp - time()) * 1000;
+            return $delta > 0 ? $delta : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string,string> $headers
+     */
+    private function logRequest(string $method, string $url, int $status, int $attempt, float $start, array $headers, ?string $error): void
+    {
+        if (!Config::isDebug() && !Config::get('APP_LOG_FILE')) {
+            return;
+        }
+
+        $durationMs = (int)((microtime(true) - $start) * 1000);
+        $rate = array_filter([
+            'weight' => $headers['x-mbx-used-weight-1m'] ?? null,
+            'orders' => $headers['x-mbx-order-count-1m'] ?? null,
+        ]);
+
+        $message = [
+            'method' => $method,
+            'url' => $url,
+            'status' => $status,
+            'attempt' => $attempt,
+            'duration_ms' => $durationMs,
+            'rate' => $rate,
+            'error' => $error,
+        ];
+
+        Logger::info($message);
     }
 }

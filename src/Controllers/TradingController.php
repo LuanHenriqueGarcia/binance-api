@@ -48,6 +48,13 @@ class TradingController
                 'LIMIT_MAKER'
             ];
 
+            if (!in_array($side, ['BUY', 'SELL'], true)) {
+                return [
+                    'success' => false,
+                    'error' => 'Parâmetro "side" deve ser BUY ou SELL'
+                ];
+            }
+
             if (!in_array($type, $allowedTypes, true)) {
                 return [
                     'success' => false,
@@ -89,10 +96,10 @@ class TradingController
             // Regras de preço e timeInForce para LIMIT
             $requiresPrice = in_array($type, ['LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT', 'LIMIT_MAKER'], true);
             if ($requiresPrice) {
-                if (empty($params['price']) || !is_numeric($params['price'])) {
+                if (empty($params['price']) || !is_numeric($params['price']) || (float)$params['price'] <= 0) {
                     return [
                         'success' => false,
-                        'error' => 'Parâmetro "price" é obrigatório e deve ser numérico para este tipo de ordem'
+                        'error' => 'Parâmetro "price" é obrigatório e deve ser numérico/positivo para este tipo de ordem'
                     ];
                 }
 
@@ -106,10 +113,10 @@ class TradingController
             // STOP/TAKE sem LIMIT exigem stopPrice
             $requiresStop = in_array($type, ['STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT'], true);
             if ($requiresStop) {
-                if (empty($params['stopPrice']) || !is_numeric($params['stopPrice'])) {
+                if (empty($params['stopPrice']) || !is_numeric($params['stopPrice']) || (float)$params['stopPrice'] <= 0) {
                     return [
                         'success' => false,
-                        'error' => 'Parâmetro "stopPrice" é obrigatório e deve ser numérico para este tipo de ordem'
+                        'error' => 'Parâmetro "stopPrice" é obrigatório e deve ser numérico/positivo para este tipo de ordem'
                     ];
                 }
                 $orderParams['stopPrice'] = $params['stopPrice'];

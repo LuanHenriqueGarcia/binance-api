@@ -90,6 +90,38 @@ class Config
     }
 
     /**
+     * Obter usuário do Basic Auth (proteção das rotas)
+     */
+    public static function getAuthUser(): ?string
+    {
+        return self::get('BASIC_AUTH_USER');
+    }
+
+    /**
+     * Obter senha do Basic Auth (proteção das rotas)
+     */
+    public static function getAuthPassword(): ?string
+    {
+        return self::get('BASIC_AUTH_PASSWORD');
+    }
+
+    /**
+     * Obter caminho para bundle de CA customizado (SSL)
+     */
+    public static function getCaBundle(): ?string
+    {
+        return self::get('BINANCE_CA_BUNDLE');
+    }
+
+    /**
+     * Verificar se deve validar SSL
+     */
+    public static function shouldVerifySsl(): bool
+    {
+        return self::get('BINANCE_SSL_VERIFY', 'true') === 'true';
+    }
+
+    /**
      * Verificar se deve usar testnet
      */
     public static function isTestnet(): bool

@@ -27,6 +27,7 @@ class RateLimiter
         $now = time();
         $file = $this->dir . '/' . md5($key) . '.json';
 
+        /** @var array<int,int> $timestamps */
         $timestamps = [];
         $fh = @fopen($file, 'c+');
         if ($fh === false) {

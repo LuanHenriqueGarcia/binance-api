@@ -4,6 +4,9 @@ namespace BinanceAPI;
 
 class Logger
 {
+    /**
+     * @param array<string,mixed> $context
+     */
     public static function info(array $context): void
     {
         if (!Config::isDebug()) {
@@ -13,11 +16,17 @@ class Logger
         self::write($context, 'info');
     }
 
+    /**
+     * @param array<string,mixed> $context
+     */
     public static function error(array $context): void
     {
         self::write($context, 'error');
     }
 
+    /**
+     * @param array<string,mixed> $context
+     */
     private static function write(array $context, string $level): void
     {
         $payload = array_merge($context, [

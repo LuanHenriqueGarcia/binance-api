@@ -124,6 +124,7 @@ class BinanceClient
         for ($attempt = 0; $attempt <= self::MAX_RETRIES; $attempt++) {
             $ch = curl_init();
 
+            /** @var array<string,string> $responseHeaders */
             $responseHeaders = [];
             $options = [
                 CURLOPT_URL => $url,
@@ -154,13 +155,13 @@ class BinanceClient
             curl_setopt_array($ch, $options);
 
             $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
 
             curl_close($ch);
 
             if ($error || $response === false) {
-                $this->logRequest($method, $url, $httpCode ?? 0, $attempt, $start, $responseHeaders, $error ?: 'Resposta vazia');
+                $this->logRequest($method, $url, $httpCode, $attempt, $start, $responseHeaders, $error ?: 'Resposta vazia');
                 return [
                     'success' => false,
                     'error' => 'Erro de conexão: ' . ($error ?: 'Resposta vazia')

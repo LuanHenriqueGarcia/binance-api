@@ -14,6 +14,9 @@ class Cache
         }
     }
 
+    /**
+     * @return array<string,mixed>|null
+     */
     public function get(string $key, int $ttlSeconds): ?array
     {
         $file = $this->path($key);
@@ -35,6 +38,9 @@ class Cache
         return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * @param array<string,mixed> $value
+     */
     public function set(string $key, array $value): void
     {
         $file = $this->path($key);

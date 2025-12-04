@@ -10,3 +10,11 @@ services:
       APP_ENV: development
     ports:
       - "8080:8080"
+
+  front:
+    build: ./binance-front
+    container_name: binance-php-front
+    depends_on:
+      - app
+    ports:
+      - "5173:80"

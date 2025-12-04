@@ -79,6 +79,39 @@ class TradingControllerTest extends TestCase
         $this->assertStringContainsString('price', $response['error']);
     }
 
+    public function testInvalidSymbol(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTC',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('symbol', $response['error']);
+    }
+
+    public function testInvalidTimeInForce(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10',
+            'timeInForce' => 'ABC'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('timeInForce', $response['error']);
+    }
+
     public function testStopRequiresStopPrice(): void
     {
         $response = $this->controller->createOrder([

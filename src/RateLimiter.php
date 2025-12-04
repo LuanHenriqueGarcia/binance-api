@@ -10,7 +10,7 @@ class RateLimiter
 
     public function __construct(?string $dir = null, ?int $max = null, ?int $window = null)
     {
-        $this->dir = $dir ?? (__DIR__ . '/../storage/ratelimit');
+        $this->dir = $dir ?? Config::getStoragePath('ratelimit');
         $this->max = $max ?? (int)Config::get('RATE_LIMIT_MAX', 60);
         $this->window = $window ?? (int)Config::get('RATE_LIMIT_WINDOW', 60);
 

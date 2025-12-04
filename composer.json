@@ -13,5 +13,10 @@
     "psr-4": {
       "BinanceAPI\\": "src/"
     }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "stan": "vendor/bin/phpstan analyse",
+    "serve": "php -S localhost:8000 -t ."
   }
 }

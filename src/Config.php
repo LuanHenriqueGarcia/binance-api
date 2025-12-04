@@ -8,6 +8,9 @@ class Config
     private static array $config = [];
     private static bool $loaded = false;
 
+    public const DEFAULT_STORAGE = __DIR__ . '/../storage';
+    private static ?string $requestId = null;
+
     public static function load(): void
     {
         if (self::$loaded) {
@@ -89,6 +92,11 @@ class Config
         return self::get('BINANCE_SECRET_KEY');
     }
 
+    public static function getRecvWindow(): int
+    {
+        return (int) self::get('BINANCE_RECV_WINDOW', 5000);
+    }
+
     /**
      * Obter usuário do Basic Auth (proteção das rotas)
      */
@@ -161,5 +169,26 @@ class Config
     public static function getEnvironment(): string
     {
         return self::get('APP_ENV', 'development');
+    }
+
+    public static function getStoragePath(string $subdir): string
+    {
+        $base = rtrim((string) self::get('STORAGE_PATH', self::DEFAULT_STORAGE), '/');
+        return $base . '/' . trim($subdir, '/');
+    }
+
+    public static function getRequestId(): string
+    {
+        if (self::$requestId === null) {
+            self::$requestId = bin2hex(random_bytes(8));
+        }
+        return self::$requestId;
+    }
+
+    public static function setRequestId(?string $id): void
+    {
+        if ($id && preg_match('/^[A-Za-z0-9\-_.]{6,64}$/', $id)) {
+            self::$requestId = $id;
+        }
     }
 }

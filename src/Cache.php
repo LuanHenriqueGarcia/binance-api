@@ -8,7 +8,7 @@ class Cache
 
     public function __construct(?string $dir = null)
     {
-        $this->dir = $dir ?? (__DIR__ . '/../storage/cache');
+        $this->dir = $dir ?? Config::getStoragePath('cache');
         if (!is_dir($this->dir)) {
             @mkdir($this->dir, 0777, true);
         }
@@ -44,7 +44,7 @@ class Cache
     public function set(string $key, array $value): void
     {
         $file = $this->path($key);
-        file_put_contents($file, json_encode($value));
+        file_put_contents($file, json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
     private function path(string $key): string

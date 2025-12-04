@@ -4,9 +4,8 @@
 
 ## Configuração
 1. Clone ou baixe o projeto.
-2. Crie um arquivo `.env` na raiz (ou edite o existente). Para endpoints públicos, pode deixar as chaves em branco. Use `.env.example` como base.
-3. (Opcional) Rode `composer install` para gerar `vendor/autoload.php` e instalar ferramentas de dev.
-4. (Produção) Gere autoload otimizado: `composer dumpautoload -o`.
+2. (Opcional) Rode `composer install` para gerar `vendor/autoload.php` e instalar ferramentas de dev.
+3. (Produção) Gere autoload otimizado: `composer dumpautoload -o`.
 
 ## Como rodar localmente
 - Usando o servidor embutido do PHP:
@@ -29,6 +28,9 @@
 - `RATE_LIMIT_ENABLED` (opcional): `true` para habilitar limitador em account/trading. Ajuste `RATE_LIMIT_MAX` e `RATE_LIMIT_WINDOW` (segundos).
 - `APP_LOG_FILE` (opcional): caminho para arquivo de log JSON (somente loga em debug).
 - `CACHE_EXCHANGEINFO_TTL` (opcional): TTL em segundos do cache de `/exchangeInfo` (default 30s).
+- `BINANCE_RECV_WINDOW` (opcional): recvWindow para requisições assinadas (default 5000ms).
+- `STORAGE_PATH` (opcional): base para pastas de cache/ratelimit (default `storage/`).
+- `METRICS_ENABLED` (opcional): expõe `/metrics` com contagem e latência média.
 4) Rode o servidor local: `php -S localhost:8000 -t .`  
 5) Teste as rotas (General, Market, Account, Trading). Endpoints de conta/trading exigem chaves.
 
@@ -72,3 +74,12 @@ curl -X DELETE http://localhost:8000/api/trading/cancel-order ^
 ## Testes e qualidade
 - Rodar testes (PHPUnit): `vendor/bin/phpunit` (controllers, router e helpers)
 - Análise estática (PHPStan nível 6): `vendor/bin/phpstan analyse`
+
+## Docker
+- Subir local: `docker-compose up --build` (expõe em http://localhost:8080).
+- Usa volume `./storage` para cache/ratelimit/logs.
+
+## Endpoints adicionais
+- Health: `GET /health` (checa storage).
+- Métricas (se `METRICS_ENABLED=true`): `GET /metrics`.
+- Correlação: header `X-Correlation-Id` aceito e devolvido como `X-Request-Id`.

@@ -8,6 +8,7 @@ use BinanceAPI\Controllers\AccountController;
 use BinanceAPI\Controllers\TradingController;
 use BinanceAPI\Config;
 use BinanceAPI\RateLimiter;
+use BinanceAPI\Metrics;
 
 class Router
 {
@@ -28,6 +29,11 @@ class Router
         $this->path = $path ?? parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         $this->params = $params ?? $this->parseParams();
         $this->rateLimiter = new RateLimiter();
+
+        $correlation = $_SERVER['HTTP_X_CORRELATION_ID'] ?? null;
+        if ($correlation) {
+            Config::setRequestId($correlation);
+        }
     }
 
     /**
@@ -38,13 +44,14 @@ class Router
     private function parseParams(): array
     {
         if ($this->method === 'GET') {
-            return $_GET;
+            return $this->normalize(is_array($_GET) ? $_GET : []);
         }
 
         if ($this->method === 'POST' || $this->method === 'DELETE') {
             $input = file_get_contents('php://input');
             $decoded = json_decode($input, true);
-            return is_array($decoded) ? $decoded : [];
+            $params = is_array($decoded) ? $decoded : [];
+            return $this->normalize($params);
         }
 
         return [];
@@ -74,6 +81,16 @@ class Router
 
         $endpoint = $pathParts[0] ?? null;
         $action = $pathParts[1] ?? null;
+
+        if ($endpoint === 'health') {
+            $this->handleHealth();
+            return;
+        }
+
+        if ($endpoint === 'metrics') {
+            $this->handleMetrics();
+            return;
+        }
 
         if ($this->isRateLimited($endpoint)) {
             return;
@@ -166,7 +183,9 @@ class Router
     {
         $httpCode = $code ?? (($data['success'] ?? true) ? 200 : ($data['code'] ?? 400));
         http_response_code($httpCode);
+        header('X-Request-Id: ' . Config::getRequestId());
         echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $this->recordMetrics($httpCode);
     }
 
     /**
@@ -178,10 +197,12 @@ class Router
     private function sendError(string $message, int $code = 400): void
     {
         http_response_code($code);
+        header('X-Request-Id: ' . Config::getRequestId());
         echo json_encode([
             'success' => false,
             'error' => $message
         ], JSON_PRETTY_PRINT);
+        $this->recordMetrics($code);
     }
 
     private function checkAuth(): bool
@@ -228,5 +249,46 @@ class Router
         }
 
         return false;
+    }
+
+    private function handleHealth(): void
+    {
+        $storage = Config::getStoragePath('');
+        $writable = is_writable(dirname($storage . '/dummy'));
+        $this->sendResponse([
+            'success' => $writable,
+            'storage_writable' => $writable
+        ], $writable ? 200 : 500);
+    }
+
+    private function handleMetrics(): void
+    {
+        if (!(bool)Config::get('METRICS_ENABLED', false)) {
+            $this->sendError('Metrics disabled', 404);
+            return;
+        }
+
+        $this->sendResponse(['success' => true, 'data' => Metrics::snapshot()]);
+    }
+
+    /**
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>
+     */
+    private function normalize(array $params): array
+    {
+        if (isset($params['symbol']) && is_string($params['symbol'])) {
+            $params['symbol'] = strtoupper($params['symbol']);
+        }
+        return $params;
+    }
+
+    private function recordMetrics(int $status): void
+    {
+        if (!(bool)Config::get('METRICS_ENABLED', false)) {
+            return;
+        }
+        $duration = (int)((microtime(true) - ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000);
+        Metrics::record($status, $duration);
     }
 }

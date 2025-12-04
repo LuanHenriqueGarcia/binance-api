@@ -38,6 +38,13 @@ class TradingController
             $type = strtoupper($params['type']);
             $symbol = strtoupper($params['symbol']);
 
+            if (!preg_match('/^[A-Z0-9]{4,20}$/', $symbol)) {
+                return [
+                    'success' => false,
+                    'error' => 'Parâmetro "symbol" inválido'
+                ];
+            }
+
             $allowedTypes = [
                 'LIMIT',
                 'MARKET',
@@ -106,7 +113,15 @@ class TradingController
                 $orderParams['price'] = $params['price'];
 
                 if ($type !== 'LIMIT_MAKER') {
-                    $orderParams['timeInForce'] = strtoupper($params['timeInForce'] ?? 'GTC');
+                    $timeInForce = strtoupper($params['timeInForce'] ?? 'GTC');
+                    $allowedTif = ['GTC', 'IOC', 'FOK'];
+                    if (!in_array($timeInForce, $allowedTif, true)) {
+                        return [
+                            'success' => false,
+                            'error' => 'Parâmetro "timeInForce" inválido (use GTC, IOC ou FOK)'
+                        ];
+                    }
+                    $orderParams['timeInForce'] = $timeInForce;
                 }
             }
 

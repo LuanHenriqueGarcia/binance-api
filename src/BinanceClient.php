@@ -10,6 +10,7 @@ class BinanceClient
     private const TIMEOUT = 10;
     private const MAX_RETRIES = 2;
     private const RETRY_DELAY_MS = 200;
+    private const MAX_BACKOFF_MS = 2000;
 
     private ?string $apiKey = null;
     private ?string $secretKey = null;
@@ -74,6 +75,7 @@ class BinanceClient
             ];
         }
 
+        $params['recvWindow'] = Config::getRecvWindow();
         $params['timestamp'] = (int)(microtime(true) * 1000);
         $queryString = http_build_query($params);
         $signature = hash_hmac('sha256', $queryString, $this->secretKey);
@@ -100,6 +102,7 @@ class BinanceClient
             ];
         }
 
+        $params['recvWindow'] = Config::getRecvWindow();
         $params['timestamp'] = (int)(microtime(true) * 1000);
         $queryString = http_build_query($params);
         $signature = hash_hmac('sha256', $queryString, $this->secretKey);
@@ -241,7 +244,8 @@ class BinanceClient
 
     private function backoff(int $attempt, ?int $retryAfterMs = null): void
     {
-        $base = $retryAfterMs ?? (self::RETRY_DELAY_MS * ($attempt + 1));
+        $base = $retryAfterMs ?? (self::RETRY_DELAY_MS * (2 ** $attempt));
+        $base = min($base, self::MAX_BACKOFF_MS);
         // jitter 50%-150%
         $delayMs = (int) ($base * (random_int(50, 150) / 100));
         usleep($delayMs * 1000);
@@ -293,6 +297,9 @@ class BinanceClient
             'duration_ms' => $durationMs,
             'rate' => $rate,
             'error' => $error,
+            'request_id' => Config::getRequestId(),
+            'user_ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ];
 
         Logger::info($message);

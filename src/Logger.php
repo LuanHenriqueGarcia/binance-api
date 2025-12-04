@@ -29,7 +29,7 @@ class Logger
      */
     private static function write(array $context, string $level): void
     {
-        $payload = array_merge($context, [
+        $payload = array_merge(self::mask($context), [
             'level' => $level,
             'ts' => date('c')
         ]);
@@ -47,5 +47,25 @@ class Logger
         }
 
         error_log($line);
+    }
+
+    /**
+     * @param array<string,mixed> $context
+     * @return array<string,mixed>
+     */
+    private static function mask(array $context): array
+    {
+        $sensitiveKeys = ['api_key', 'secret_key', 'X-MBX-APIKEY'];
+
+        $masked = [];
+        foreach ($context as $key => $value) {
+            if (in_array($key, $sensitiveKeys, true) && is_string($value)) {
+                $masked[$key] = substr($value, 0, 4) . '****';
+            } else {
+                $masked[$key] = $value;
+            }
+        }
+
+        return $masked;
     }
 }

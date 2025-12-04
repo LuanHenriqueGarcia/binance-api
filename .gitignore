@@ -12,6 +12,10 @@
 Thumbs.db
 
 *.log
+storage/*.log
+storage/cache/
+storage/ratelimit/
+.phpunit.result.cache
 
 vendor/
 composer.lock

@@ -65,7 +65,8 @@ class GeneralController
             $ttl = (int)Config::get('CACHE_EXCHANGEINFO_TTL', 30);
             $cacheKey = 'exchangeInfo:' . md5(json_encode($params));
 
-            if ($cached = $cache->get($cacheKey, $ttl)) {
+            $noCache = isset($params['noCache']) && ($params['noCache'] === true || $params['noCache'] === 'true' || $params['noCache'] === 1 || $params['noCache'] === '1');
+            if (!$noCache && ($cached = $cache->get($cacheKey, $ttl))) {
                 return [
                     'success' => true,
                     'data' => $cached,

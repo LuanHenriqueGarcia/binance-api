@@ -182,7 +182,9 @@ class Router
      */
     private function sendResponse(array $data, ?int $code = null): void
     {
-        $httpCode = $code ?? (($data['success'] ?? true) ? 200 : ($data['code'] ?? 400));
+        $isSuccess = array_key_exists('success', $data) ? (bool)$data['success'] : true;
+        $fallbackCode = $isSuccess ? 200 : (int)($data['code'] ?? 400);
+        $httpCode = $code ?? $fallbackCode;
         http_response_code($httpCode);
         header('X-Request-Id: ' . Config::getRequestId());
         echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

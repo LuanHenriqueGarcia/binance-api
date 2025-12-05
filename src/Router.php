@@ -135,6 +135,15 @@ class Router
             'ticker' => $this->sendResponse($controller->ticker($this->params)),
             'order-book' => $this->sendResponse($controller->orderBook($this->params)),
             'trades' => $this->sendResponse($controller->trades($this->params)),
+            'avg-price' => $this->sendResponse($controller->avgPrice($this->params)),
+            'book-ticker' => $this->sendResponse($controller->bookTicker($this->params)),
+            'agg-trades' => $this->sendResponse($controller->aggTrades($this->params)),
+            'klines' => $this->sendResponse($controller->klines($this->params)),
+            'ui-klines' => $this->sendResponse($controller->uiKlines($this->params)),
+            'historical-trades' => $this->sendResponse($controller->historicalTrades($this->params)),
+            'rolling-window-ticker' => $this->sendResponse($controller->rollingWindowTicker($this->params)),
+            'ticker-price' => $this->sendResponse($controller->tickerPrice($this->params)),
+            'ticker-24h' => $this->sendResponse($controller->ticker24h($this->params)),
             default => $this->sendError('Ação não encontrada', 404)
         };
     }
@@ -153,6 +162,14 @@ class Router
             'open-orders' => $this->sendResponse($controller->getOpenOrders($this->params)),
             'order-history' => $this->sendResponse($controller->getOrderHistory($this->params)),
             'balance' => $this->sendResponse($controller->getAssetBalance($this->params)),
+            'my-trades' => $this->sendResponse($controller->getMyTrades($this->params)),
+            'account-status' => $this->sendResponse($controller->getAccountStatus($this->params)),
+            'api-trading-status' => $this->sendResponse($controller->getApiTradingStatus($this->params)),
+            'capital-config' => $this->sendResponse($controller->getCapitalConfig($this->params)),
+            'dust-transfer' => $this->sendResponse($controller->dustTransfer($this->params)),
+            'asset-dividend' => $this->sendResponse($controller->assetDividend($this->params)),
+            'convert-transferable' => $this->sendResponse($controller->convertTransferable($this->params)),
+            'p2p-orders' => $this->sendResponse($controller->p2pOrders($this->params)),
             default => $this->sendError('Ação não encontrada', 404)
         };
     }
@@ -169,6 +186,15 @@ class Router
         match ($action) {
             'create-order' => $this->sendResponse($controller->createOrder($this->params)),
             'cancel-order' => $this->sendResponse($controller->cancelOrder($this->params)),
+            'test-order' => $this->sendResponse($controller->testOrder($this->params)),
+            'query-order' => $this->sendResponse($controller->queryOrder($this->params)),
+            'cancel-open-orders' => $this->sendResponse($controller->cancelOpenOrders($this->params)),
+            'create-oco' => $this->sendResponse($controller->createOco($this->params)),
+            'list-oco' => $this->sendResponse($controller->listOco($this->params)),
+            'cancel-oco' => $this->sendResponse($controller->cancelOco($this->params)),
+            'order-rate-limit' => $this->sendResponse($controller->orderRateLimit($this->params)),
+            'commission-rate' => $this->sendResponse($controller->commissionRate($this->params)),
+            'cancel-replace' => $this->sendResponse($controller->cancelReplace($this->params)),
             default => $this->sendError('Ação não encontrada', 404)
         };
     }

@@ -44,7 +44,10 @@
       "name": "Exchange Info (symbol)",
       "method": "GET",
       "url": "{{ _.base_url }}/api/general/exchange-info",
-      "parameters": [{ "name": "symbol", "value": "BTCUSDT" }]
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "permissions", "value": "SPOT", "disabled": true }
+      ]
     },
 
     { "_id": "fld_market", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Market" },
@@ -52,10 +55,29 @@
       "_id": "req_ticker",
       "_type": "request",
       "parentId": "fld_market",
-      "name": "Ticker Price",
+      "name": "Ticker Price (24h, single)",
       "method": "GET",
       "url": "{{ _.base_url }}/api/market/ticker",
       "parameters": [{ "name": "symbol", "value": "BTCUSDT" }]
+    },
+    {
+      "_id": "req_ticker_price_all",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Ticker Price (all)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/ticker-price"
+    },
+    {
+      "_id": "req_ticker_24h_all",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Ticker 24h (all or symbol)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/ticker-24h",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT", "disabled": true }
+      ]
     },
     {
       "_id": "req_orderbook",
@@ -79,6 +101,98 @@
       "parameters": [
         { "name": "symbol", "value": "BTCUSDT" },
         { "name": "limit", "value": "500" }
+      ]
+    },
+    {
+      "_id": "req_historical_trades",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Historical Trades (API key)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/historical-trades",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": true },
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "100" },
+        { "name": "fromId", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_avg_price",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Average Price (5m)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/avg-price",
+      "parameters": [{ "name": "symbol", "value": "BTCUSDT" }]
+    },
+    {
+      "_id": "req_book_ticker",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Book Ticker (one/all)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/book-ticker",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_agg_trades",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Agg Trades",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/agg-trades",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "500" },
+        { "name": "fromId", "value": "", "disabled": true },
+        { "name": "startTime", "value": "", "disabled": true },
+        { "name": "endTime", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_klines",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Klines",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/klines",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "interval", "value": "1h" },
+        { "name": "limit", "value": "500" },
+        { "name": "startTime", "value": "", "disabled": true },
+        { "name": "endTime", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_ui_klines",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "UI Klines",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/ui-klines",
+      "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "interval", "value": "1h" },
+        { "name": "limit", "value": "500" },
+        { "name": "startTime", "value": "", "disabled": true },
+        { "name": "endTime", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_rolling_ticker",
+      "_type": "request",
+      "parentId": "fld_market",
+      "name": "Rolling Window Ticker",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/market/rolling-window-ticker",
+      "parameters": [
+        { "name": "windowSize", "value": "1d" },
+        { "name": "type", "value": "ROLLING_WINDOW" },
+        { "name": "symbol", "value": "BTCUSDT", "disabled": true }
       ]
     },
 
@@ -135,6 +249,112 @@
         { "name": "asset", "value": "USDT" }
       ]
     },
+    {
+      "_id": "req_my_trades",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "My Trades",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/my-trades",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "limit", "value": "500" }
+      ]
+    },
+    {
+      "_id": "req_account_status",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Account Status",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/account-status",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false }
+      ]
+    },
+    {
+      "_id": "req_api_trading_status",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "API Trading Status",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/api-trading-status",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false }
+      ]
+    },
+    {
+      "_id": "req_capital_config",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Capital Config (balances detail)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/capital-config",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false }
+      ]
+    },
+    {
+      "_id": "req_dust_transfer",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Dust Transfer",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/account/dust-transfer",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"assets\": [\"USDT\", \"BNB\"]\n}"
+      }
+    },
+    {
+      "_id": "req_asset_dividend",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Asset Dividend",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/asset-dividend",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "asset", "value": "BNB", "disabled": true },
+        { "name": "limit", "value": "20" }
+      ]
+    },
+    {
+      "_id": "req_convert_transferable",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "Convert Transferable",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/convert-transferable",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "fromAsset", "value": "BTC" },
+        { "name": "toAsset", "value": "USDT" }
+      ]
+    },
+    {
+      "_id": "req_p2p_orders",
+      "_type": "request",
+      "parentId": "fld_account",
+      "name": "P2P Orders",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/account/p2p-orders",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "fiatSymbol", "value": "BRL", "disabled": true },
+        { "name": "tradeType", "value": "BUY", "disabled": true },
+        { "name": "page", "value": "1" },
+        { "name": "rows", "value": "20" }
+      ]
+    },
 
     { "_id": "fld_trading", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Trading (auth)" },
     {
@@ -172,6 +392,122 @@
         "mimeType": "application/json",
         "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"orderId\": \"123456\"\n}"
       }
+    },
+    {
+      "_id": "req_cancel_open_orders",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Cancel All Open Orders (symbol)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/trading/cancel-open-orders",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\"\n}"
+      }
+    },
+    {
+      "_id": "req_test_order",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Test Order (no fill)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/trading/test-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"quantity\": \"0.001\",\n  \"price\": \"42000\",\n  \"timeInForce\": \"GTC\"\n}"
+      }
+    },
+    {
+      "_id": "req_query_order",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Query Order",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/trading/query-order",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "symbol", "value": "BTCUSDT" },
+        { "name": "orderId", "value": "123" },
+        { "name": "origClientOrderId", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_create_oco",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Create OCO",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/trading/create-oco",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"side\": \"SELL\",\n  \"quantity\": \"0.001\",\n  \"price\": \"50000\",\n  \"stopPrice\": \"48000\",\n  \"stopLimitPrice\": \"47900\",\n  \"stopLimitTimeInForce\": \"GTC\"\n}"
+      }
+    },
+    {
+      "_id": "req_list_oco",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "List OCO",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/trading/list-oco",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "limit", "value": "10" },
+        { "name": "fromId", "value": "", "disabled": true },
+        { "name": "startTime", "value": "", "disabled": true },
+        { "name": "endTime", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_cancel_oco",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Cancel OCO",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/trading/cancel-oco",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"orderListId\": \"12345\"\n}"
+      }
+    },
+    {
+      "_id": "req_cancel_replace",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Cancel/Replace Order",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/trading/cancel-replace",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.api_key }}\",\n  \"secret_key\": \"{{ _.secret_key }}\",\n  \"symbol\": \"BTCUSDT\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"quantity\": \"0.001\",\n  \"price\": \"42000\",\n  \"cancelOrderId\": \"123\",\n  \"cancelReplaceMode\": \"STOP_ON_FAILURE\"\n}"
+      }
+    },
+    {
+      "_id": "req_order_rate_limit",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Order Rate Limit",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/trading/order-rate-limit",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false }
+      ]
+    },
+    {
+      "_id": "req_commission_rate",
+      "_type": "request",
+      "parentId": "fld_trading",
+      "name": "Commission Rate",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/trading/commission-rate",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.secret_key }}", "disabled": false },
+        { "name": "symbol", "value": "BTCUSDT" }
+      ]
     },
 
     {

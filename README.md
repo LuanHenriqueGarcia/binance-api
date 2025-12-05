@@ -41,12 +41,28 @@
 - Preço atual: `GET /api/market/ticker?symbol=BTCUSDT`
 - Order book: `GET /api/market/order-book?symbol=BTCUSDT&limit=100`
 - Trades: `GET /api/market/trades?symbol=BTCUSDT&limit=500`
+- Agg trades: `GET /api/market/agg-trades?symbol=BTCUSDT&limit=500`
+- Book ticker: `GET /api/market/book-ticker` (um ou todos com `symbol`)
+- Avg price: `GET /api/market/avg-price?symbol=BTCUSDT`
+- Klines/UI Klines: `GET /api/market/klines?symbol=BTCUSDT&interval=1h&limit=500` (ou `/ui-klines`)
+- Historical trades: `GET /api/market/historical-trades?symbol=BTCUSDT&limit=100`
+- Rolling window ticker: `GET /api/market/rolling-window-ticker?windowSize=1d` (opcional `symbol`/`symbols`)
+- Ticker price (all): `GET /api/market/ticker-price` (ou com `symbol`)
+- Ticker 24h (all): `GET /api/market/ticker-24h` (ou com `symbol`)
 
 Endpoints autenticados (usam chaves do `.env` ou params `api_key`/`secret_key`):
 - Info da conta: `GET /api/account/info`
 - Ordens abertas: `GET /api/account/open-orders?symbol=BTCUSDT`
 - Histórico de ordens: `GET /api/account/order-history?symbol=BTCUSDT&limit=500`
 - Saldo de um ativo: `GET /api/account/balance?asset=USDT`
+- Trades da conta: `GET /api/account/my-trades?symbol=BTCUSDT&limit=500`
+- Status da conta: `GET /api/account/account-status`
+- Status de trading: `GET /api/account/api-trading-status`
+- Capital config (saldos detalhados): `GET /api/account/capital-config`
+- Dust transfer: `POST /api/account/dust-transfer` (assets em JSON ou CSV)
+- Asset dividend: `GET /api/account/asset-dividend?asset=BNB&limit=20`
+- Convert transferable: `GET /api/account/convert-transferable?fromAsset=BTC&toAsset=USDT`
+- P2P orders: `GET /api/account/p2p-orders?fiatSymbol=BRL&tradeType=BUY`
 
 Trading:
 ```bash
@@ -58,12 +74,47 @@ curl -X POST http://localhost:8000/api/trading/create-order ^
 # Criar ordem MARKET com quoteOrderQty
 curl -X POST http://localhost:8000/api/trading/create-order ^
 -H "Content-Type: application/json" ^
--d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"side\":\"BUY\",\"type\":\"MARKET\",\"quoteOrderQty\":\"50\"}"
+  -d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"side\":\"BUY\",\"type\":\"MARKET\",\"quoteOrderQty\":\"50\"}"
 
 # Cancelar ordem
 curl -X DELETE http://localhost:8000/api/trading/cancel-order ^
 -H "Content-Type: application/json" ^
 -d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"orderId\":\"123456\"}"
+
+# Cancel/Replace (SOR)
+curl -X POST http://localhost:8000/api/trading/cancel-replace ^
+-H "Content-Type: application/json" ^
+-d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"side\":\"BUY\",\"type\":\"LIMIT\",\"quantity\":\"0.001\",\"price\":\"42000\",\"cancelOrderId\":\"123\",\"cancelReplaceMode\":\"STOP_ON_FAILURE\"}"
+
+# Test order (não executa)
+curl -X POST http://localhost:8000/api/trading/test-order ^
+-H "Content-Type: application/json" ^
+-d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"side\":\"BUY\",\"type\":\"LIMIT\",\"quantity\":\"0.001\",\"price\":\"42000\"}"
+
+# Consultar ordem
+curl -X GET "http://localhost:8000/api/trading/query-order?api_key=...&secret_key=...&symbol=BTCUSDT&orderId=123"
+
+# Cancelar todas as ordens abertas de um símbolo
+curl -X DELETE http://localhost:8000/api/trading/cancel-open-orders ^
+-H "Content-Type: application/json" ^
+-d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\"}"
+
+# Criar OCO
+curl -X POST http://localhost:8000/api/trading/create-oco ^
+-H "Content-Type: application/json" ^
+-d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"symbol\":\"BTCUSDT\",\"side\":\"SELL\",\"quantity\":\"0.001\",\"price\":\"50000\",\"stopPrice\":\"48000\",\"stopLimitPrice\":\"47900\"}"
+
+# Listar OCOs
+curl -X GET "http://localhost:8000/api/trading/list-oco?api_key=...&secret_key=...&limit=10"
+
+# Cancelar OCO
+curl -X DELETE http://localhost:8000/api/trading/cancel-oco ^
+-H "Content-Type: application/json" ^
+-d "{\"api_key\":\"...\",\"secret_key\":\"...\",\"orderListId\":\"12345\"}"
+
+# Comissão e rate limit
+curl -X GET "http://localhost:8000/api/trading/commission-rate?api_key=...&secret_key=...&symbol=BTCUSDT"
+curl -X GET "http://localhost:8000/api/trading/order-rate-limit?api_key=...&secret_key=..."
 ```
 
 ## Campos extras em ordens

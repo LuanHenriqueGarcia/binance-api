@@ -126,4 +126,87 @@ class TradingControllerTest extends TestCase
         $this->assertFalse($response['success']);
         $this->assertStringContainsString('stopPrice', $response['error']);
     }
+
+    public function testQueryOrderRequiresIdentifier(): void
+    {
+        $response = $this->controller->queryOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('orderId', $response['error']);
+    }
+
+    public function testCancelOpenOrdersRequiresSymbol(): void
+    {
+        $response = $this->controller->cancelOpenOrders([
+            'api_key' => 'k',
+            'secret_key' => 's',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('symbol', $response['error']);
+    }
+
+    public function testCreateOcoRequiresStopPrice(): void
+    {
+        $response = $this->controller->createOco([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'quantity' => '0.1',
+            'price' => '1.0',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('stopPrice', $response['error']);
+    }
+
+    public function testCommissionRateRequiresSymbol(): void
+    {
+        $response = $this->controller->commissionRate([
+            'api_key' => 'k',
+            'secret_key' => 's',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('symbol', $response['error']);
+    }
+
+    public function testCancelReplaceRequiresCancelIdentifier(): void
+    {
+        $response = $this->controller->cancelReplace([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10',
+            'cancelReplaceMode' => 'STOP_ON_FAILURE'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('cancelOrderId', $response['error']);
+    }
+
+    public function testCancelReplaceRequiresMode(): void
+    {
+        $response = $this->controller->cancelReplace([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10',
+            'cancelOrderId' => '1',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('cancelReplaceMode', $response['error']);
+    }
 }

@@ -79,10 +79,17 @@ class GeneralController
             $options = [];
             $symbol = $params['symbol'] ?? null;
             $symbols = $params['symbols'] ?? null;
+            $permissions = $params['permissions'] ?? $params['market'] ?? null;
             if ($symbol) {
                 $options['symbol'] = $symbol;
             } elseif ($symbols) {
                 $options['symbols'] = $symbols;
+            }
+
+            if ($permissions) {
+                $options['permissions'] = is_array($permissions)
+                    ? array_map('strtoupper', $permissions)
+                    : strtoupper((string)$permissions);
             }
 
             $response = $client->get('/api/v3/exchangeInfo', $options);

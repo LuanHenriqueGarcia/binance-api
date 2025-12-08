@@ -516,8 +516,8 @@
       "parentId": "env_base",
       "name": "Local Secrets",
       "data": {
-        "api_key": "",
-        "secret_key": ""
+        "api_key": "6nY3aSkMCacGWE3A2YrFIFTjXpAKZVkHPcIaJdtaDx3RYbpfAUKvDAwns8GvEJRe",
+        "secret_key": "Y5LBT1H3MajBBqmAzfBuVnFNLglpuVf1kQTYdGzlakytFa9pyWHbWhVC2XIlqo5X"
       }
     }
   ]

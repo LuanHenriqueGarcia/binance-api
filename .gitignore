@@ -16,6 +16,9 @@ storage/*.log
 storage/cache/
 storage/ratelimit/
 .phpunit.result.cache
+.phpunit.cache/
+
+coverage/
 
 vendor/
 composer.lock

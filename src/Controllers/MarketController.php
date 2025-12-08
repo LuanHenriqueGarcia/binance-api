@@ -306,14 +306,25 @@ class MarketController
     public function rollingWindowTicker(array $params): array
     {
         try {
+            // Validar que pelo menos symbol ou symbols foi fornecido
+            if (empty($params['symbol']) && empty($params['symbols'])) {
+                return [
+                    'success' => false,
+                    'error' => 'Parâmetro obrigatório: symbol ou symbols'
+                ];
+            }
+
             $client = new BinanceClient();
             $window = $params['windowSize'] ?? '1d';
-            $type = $params['type'] ?? 'ROLLING_WINDOW';
 
             $options = [
-                'type' => $type,
                 'windowSize' => $window,
             ];
+
+            // type aceita apenas FULL ou MINI (default: FULL)
+            if (!empty($params['type']) && in_array($params['type'], ['FULL', 'MINI'])) {
+                $options['type'] = $params['type'];
+            }
 
             if (!empty($params['symbol'])) {
                 $options['symbol'] = $params['symbol'];

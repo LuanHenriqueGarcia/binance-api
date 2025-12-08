@@ -120,4 +120,180 @@ class RouterTest extends TestCase
         $method->invoke($router, $data);
         return (string)ob_get_clean();
     }
+
+    public function testDispatchHealthEndpoint(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/health', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $decoded = json_decode($output, true);
+        $this->assertArrayHasKey('success', $decoded);
+        $this->assertArrayHasKey('storage_writable', $decoded);
+    }
+
+    public function testDispatchMetricsDisabled(): void
+    {
+        Config::fake(['METRICS_ENABLED' => false]);
+        $router = new Router('GET', '/api/metrics', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertFalse($decoded['success']);
+        $this->assertStringContainsString('disabled', $decoded['error']);
+    }
+
+    public function testDispatchMetricsEnabled(): void
+    {
+        Config::fake(['METRICS_ENABLED' => true]);
+        $router = new Router('GET', '/api/metrics', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(200, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertTrue($decoded['success']);
+        $this->assertArrayHasKey('data', $decoded);
+    }
+
+    public function testNormalizeUppercasesSymbolViaParseParams(): void
+    {
+        // Test normalize with actual parseParams path
+        $_GET = ['symbol' => 'btcusdt'];
+        $router = new Router('GET', '/', null);
+
+        $paramsProperty = new ReflectionProperty(Router::class, 'params');
+        $paramsProperty->setAccessible(true);
+        $params = $paramsProperty->getValue($router);
+
+        $this->assertSame('BTCUSDT', $params['symbol']);
+        $_GET = [];
+    }
+
+    public function testSendErrorMethod(): void
+    {
+        $router = new Router('GET', '/test', []);
+        $method = new ReflectionMethod(Router::class, 'sendError');
+        $method->setAccessible(true);
+
+        ob_start();
+        $method->invoke($router, 'Test error', 400);
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(400, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertFalse($decoded['success']);
+        $this->assertSame('Test error', $decoded['error']);
+    }
+
+    public function testDispatchGeneralUnknownAction(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/general/unknown', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+        $decoded = json_decode($output, true);
+        $this->assertFalse($decoded['success']);
+    }
+
+    public function testDispatchMarketUnknownAction(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/market/unknown', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+    }
+
+    public function testDispatchAccountUnknownAction(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/account/unknown', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+    }
+
+    public function testDispatchTradingUnknownAction(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/trading/unknown', []);
+
+        ob_start();
+        $router->dispatch();
+        $output = (string)ob_get_clean();
+
+        $this->assertSame(404, http_response_code());
+    }
+
+    public function testRateLimitNotEnabledByDefault(): void
+    {
+        Config::fake([]);
+        $router = new Router('GET', '/api/account/info', []);
+
+        $method = new ReflectionMethod(Router::class, 'isRateLimited');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($router, 'account');
+
+        $this->assertFalse($result);
+    }
+
+    public function testRateLimitNotAppliedToGeneralEndpoint(): void
+    {
+        Config::fake(['RATE_LIMIT_ENABLED' => 'true']);
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+
+        $router = new Router('GET', '/api/general/ping', []);
+
+        $method = new ReflectionMethod(Router::class, 'isRateLimited');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($router, 'general');
+
+        $this->assertFalse($result);
+    }
+
+    public function testParseParamsGet(): void
+    {
+        $_GET = ['test' => 'value'];
+        $router = new Router('GET', '/test', null);
+
+        $paramsProperty = new ReflectionProperty(Router::class, 'params');
+        $paramsProperty->setAccessible(true);
+        $params = $paramsProperty->getValue($router);
+
+        $this->assertSame('value', $params['test']);
+        $_GET = [];
+    }
+
+    public function testCorrelationIdSetFromHeader(): void
+    {
+        $_SERVER['HTTP_X_CORRELATION_ID'] = 'test-correlation-id';
+        Config::fake([]);
+        new Router('GET', '/', []);
+
+        $this->assertSame('test-correlation-id', Config::getRequestId());
+
+        unset($_SERVER['HTTP_X_CORRELATION_ID']);
+    }
 }

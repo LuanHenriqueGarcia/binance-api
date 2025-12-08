@@ -190,9 +190,9 @@
       "method": "GET",
       "url": "{{ _.base_url }}/api/market/rolling-window-ticker",
       "parameters": [
+        { "name": "symbol", "value": "BTCUSDT" },
         { "name": "windowSize", "value": "1d" },
-        { "name": "type", "value": "ROLLING_WINDOW" },
-        { "name": "symbol", "value": "BTCUSDT", "disabled": true }
+        { "name": "type", "value": "FULL", "disabled": true }
       ]
     },
 

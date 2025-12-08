@@ -1,6 +1,7 @@
 <?php
 
 use BinanceAPI\Controllers\TradingController;
+use BinanceAPI\Config;
 use PHPUnit\Framework\TestCase;
 
 class TradingControllerTest extends TestCase
@@ -9,6 +10,7 @@ class TradingControllerTest extends TestCase
 
     protected function setUp(): void
     {
+        Config::fake([]);
         $this->controller = new TradingController();
     }
 
@@ -208,5 +210,102 @@ class TradingControllerTest extends TestCase
 
         $this->assertFalse($response['success']);
         $this->assertStringContainsString('cancelReplaceMode', $response['error']);
+    }
+
+    public function testFormatResponseSuccess(): void
+    {
+        $method = new ReflectionMethod(TradingController::class, 'formatResponse');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, ['orderId' => '12345']);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(['orderId' => '12345'], $result['data']);
+    }
+
+    public function testFormatResponsePropagatesError(): void
+    {
+        $method = new ReflectionMethod(TradingController::class, 'formatResponse');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, ['success' => false, 'error' => 'Order rejected']);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('Order rejected', $result['error']);
+    }
+
+    public function testCancelOrderRequiresKeys(): void
+    {
+        $response = $this->controller->cancelOrder([]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('api_key', $response['error']);
+    }
+
+    public function testCancelOrderRequiresSymbol(): void
+    {
+        $response = $this->controller->cancelOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('symbol', $response['error']);
+    }
+
+    public function testCancelOrderRequiresOrderId(): void
+    {
+        $response = $this->controller->cancelOrder([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('orderId', $response['error']);
+    }
+
+    public function testTestOrderRequiresKeys(): void
+    {
+        $response = $this->controller->testOrder([]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('api_key', $response['error']);
+    }
+
+    public function testListOcoRequiresKeys(): void
+    {
+        $response = $this->controller->listOco([]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('api_key', $response['error']);
+    }
+
+    public function testCancelOcoRequiresKeys(): void
+    {
+        $response = $this->controller->cancelOco([]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('api_key', $response['error']);
+    }
+
+    public function testCancelOcoRequiresOrderIdOrListClientOrderId(): void
+    {
+        $response = $this->controller->cancelOco([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('orderListId', $response['error']);
+    }
+
+    public function testOrderRateLimitRequiresKeys(): void
+    {
+        $response = $this->controller->orderRateLimit([]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('api_key', $response['error']);
     }
 }

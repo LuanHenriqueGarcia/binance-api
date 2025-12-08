@@ -1,0 +1,278 @@
+<?php
+
+use BinanceAPI\Config;
+use PHPUnit\Framework\TestCase;
+
+class ConfigTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        // Reset config for each test
+        Config::fake([]);
+    }
+
+    public function testFakeSetsConfigValues(): void
+    {
+        Config::fake(['TEST_KEY' => 'test_value']);
+
+        $this->assertSame('test_value', Config::get('TEST_KEY'));
+    }
+
+    public function testGetReturnsDefaultWhenKeyNotFound(): void
+    {
+        Config::fake([]);
+
+        $this->assertSame('default', Config::get('NON_EXISTENT_KEY', 'default'));
+    }
+
+    public function testGetBinanceApiKey(): void
+    {
+        Config::fake(['BINANCE_API_KEY' => 'my_api_key']);
+
+        $this->assertSame('my_api_key', Config::getBinanceApiKey());
+    }
+
+    public function testGetBinanceSecretKey(): void
+    {
+        Config::fake(['BINANCE_SECRET_KEY' => 'my_secret']);
+
+        $this->assertSame('my_secret', Config::getBinanceSecretKey());
+    }
+
+    public function testGetRecvWindowDefault(): void
+    {
+        Config::fake([]);
+
+        $this->assertSame(5000, Config::getRecvWindow());
+    }
+
+    public function testGetRecvWindowCustom(): void
+    {
+        Config::fake(['BINANCE_RECV_WINDOW' => '10000']);
+
+        $this->assertSame(10000, Config::getRecvWindow());
+    }
+
+    public function testGetAuthUser(): void
+    {
+        Config::fake(['BASIC_AUTH_USER' => 'admin']);
+
+        $this->assertSame('admin', Config::getAuthUser());
+    }
+
+    public function testGetAuthPassword(): void
+    {
+        Config::fake(['BASIC_AUTH_PASSWORD' => 'secret']);
+
+        $this->assertSame('secret', Config::getAuthPassword());
+    }
+
+    public function testGetCaBundle(): void
+    {
+        Config::fake(['BINANCE_CA_BUNDLE' => '/path/to/ca.crt']);
+
+        $this->assertSame('/path/to/ca.crt', Config::getCaBundle());
+    }
+
+    public function testShouldVerifySslDefaultTrue(): void
+    {
+        Config::fake([]);
+
+        $this->assertTrue(Config::shouldVerifySsl());
+    }
+
+    public function testShouldVerifySslFalse(): void
+    {
+        Config::fake(['BINANCE_SSL_VERIFY' => 'false']);
+
+        $this->assertFalse(Config::shouldVerifySsl());
+    }
+
+    public function testIsTestnetDefaultFalse(): void
+    {
+        Config::fake([]);
+
+        $this->assertFalse(Config::isTestnet());
+    }
+
+    public function testIsTestnetTrue(): void
+    {
+        Config::fake(['BINANCE_TESTNET' => 'true']);
+
+        $this->assertTrue(Config::isTestnet());
+    }
+
+    public function testGetBinanceBaseUrlDefault(): void
+    {
+        Config::fake([]);
+
+        $this->assertSame('https://api.binance.com', Config::getBinanceBaseUrl());
+    }
+
+    public function testGetBinanceBaseUrlTestnet(): void
+    {
+        Config::fake(['BINANCE_TESTNET' => 'true']);
+
+        $this->assertSame('https://testnet.binance.vision', Config::getBinanceBaseUrl());
+    }
+
+    public function testGetBinanceBaseUrlCustom(): void
+    {
+        Config::fake(['BINANCE_BASE_URL' => 'https://custom.binance.com/']);
+
+        $this->assertSame('https://custom.binance.com', Config::getBinanceBaseUrl());
+    }
+
+    public function testIsDebugDefaultFalse(): void
+    {
+        Config::fake([]);
+
+        $this->assertFalse(Config::isDebug());
+    }
+
+    public function testIsDebugTrue(): void
+    {
+        Config::fake(['APP_DEBUG' => 'true']);
+
+        $this->assertTrue(Config::isDebug());
+    }
+
+    public function testGetEnvironmentDefault(): void
+    {
+        Config::fake([]);
+
+        $this->assertSame('development', Config::getEnvironment());
+    }
+
+    public function testGetEnvironmentProduction(): void
+    {
+        Config::fake(['APP_ENV' => 'production']);
+
+        $this->assertSame('production', Config::getEnvironment());
+    }
+
+    public function testGetStoragePath(): void
+    {
+        Config::fake(['STORAGE_PATH' => '/var/storage']);
+
+        $this->assertSame('/var/storage/logs', Config::getStoragePath('logs'));
+    }
+
+    public function testGetRequestIdGeneratesId(): void
+    {
+        $id1 = Config::getRequestId();
+
+        $this->assertNotEmpty($id1);
+        $this->assertSame(16, strlen($id1)); // 8 bytes = 16 hex chars
+    }
+
+    public function testSetRequestIdValid(): void
+    {
+        Config::setRequestId('test-request-123');
+
+        $this->assertSame('test-request-123', Config::getRequestId());
+    }
+
+    public function testSetRequestIdInvalidTooShort(): void
+    {
+        $original = Config::getRequestId();
+        Config::setRequestId('abc'); // too short, should be ignored
+
+        $this->assertSame($original, Config::getRequestId());
+    }
+
+    public function testSetRequestIdWithNull(): void
+    {
+        $original = Config::getRequestId();
+        Config::setRequestId(null);
+
+        $this->assertSame($original, Config::getRequestId());
+    }
+
+    public function testSetRequestIdWithValidId(): void
+    {
+        Config::setRequestId('valid-id-12345');
+
+        $this->assertSame('valid-id-12345', Config::getRequestId());
+    }
+
+    public function testSetRequestIdWithSpecialChars(): void
+    {
+        $original = Config::getRequestId();
+        Config::setRequestId('valid_id.test-123');
+
+        $this->assertSame('valid_id.test-123', Config::getRequestId());
+    }
+
+    public function testSetRequestIdInvalidChars(): void
+    {
+        $original = Config::getRequestId();
+        Config::setRequestId('invalid@id!'); // invalid chars
+
+        $this->assertSame($original, Config::getRequestId());
+    }
+
+    public function testGetBinanceApiKeyNull(): void
+    {
+        Config::fake([]);
+
+        $this->assertNull(Config::getBinanceApiKey());
+    }
+
+    public function testGetBinanceSecretKeyNull(): void
+    {
+        Config::fake([]);
+
+        $this->assertNull(Config::getBinanceSecretKey());
+    }
+
+    public function testGetCaBundleNull(): void
+    {
+        Config::fake([]);
+
+        $this->assertNull(Config::getCaBundle());
+    }
+
+    public function testGetAuthUserNull(): void
+    {
+        Config::fake([]);
+
+        $this->assertNull(Config::getAuthUser());
+    }
+
+    public function testGetAuthPasswordNull(): void
+    {
+        Config::fake([]);
+
+        $this->assertNull(Config::getAuthPassword());
+    }
+
+    public function testGetStoragePathWithSubdir(): void
+    {
+        Config::fake(['STORAGE_PATH' => '/var/storage/']);
+
+        $this->assertSame('/var/storage/cache', Config::getStoragePath('cache'));
+    }
+
+    public function testGetStoragePathTrimsSlashes(): void
+    {
+        Config::fake(['STORAGE_PATH' => '/var/storage']);
+
+        $this->assertSame('/var/storage/logs', Config::getStoragePath('/logs/'));
+    }
+
+    public function testShouldVerifySslFalseWithZero(): void
+    {
+        Config::fake(['BINANCE_SSL_VERIFY' => '0']);
+
+        // '0' is not 'true' but also not 'false', so defaults to true behavior
+        $this->assertTrue(Config::shouldVerifySsl());
+    }
+
+    public function testIsDebugWithOne(): void
+    {
+        Config::fake(['APP_DEBUG' => '1']);
+
+        $this->assertFalse(Config::isDebug()); // expects 'true' string
+    }
+}

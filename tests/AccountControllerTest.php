@@ -118,4 +118,26 @@ class AccountControllerTest extends TestCase
         $this->assertFalse($response['success']);
         $this->assertStringContainsString('Chaves de API', $response['error']);
     }
+
+    public function testFormatResponseSuccess(): void
+    {
+        $method = new ReflectionMethod(AccountController::class, 'formatResponse');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, ['balance' => '1.5']);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(['balance' => '1.5'], $result['data']);
+    }
+
+    public function testFormatResponsePropagatesError(): void
+    {
+        $method = new ReflectionMethod(AccountController::class, 'formatResponse');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->controller, ['success' => false, 'error' => 'test']);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('test', $result['error']);
+    }
 }

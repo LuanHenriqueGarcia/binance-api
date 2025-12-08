@@ -1,4 +1,4 @@
-# 🚀 Binance API PHP
+#  Binance API PHP
 
 <div align="center">
 
@@ -19,22 +19,22 @@
 
 ---
 
-## ✨ Features
+##  Features
 
-- 🔐 **Autenticação HMAC-SHA256** com suporte a API Keys da Binance
-- 📊 **Market Data** - Preços, Order Book, Trades, Klines
-- 💼 **Conta** - Saldos, Histórico de Ordens, Status
-- 💹 **Trading** - Criar/Cancelar Ordens, OCO, Test Orders
-- ⚡ **Cache inteligente** para Exchange Info
-- 🛡️ **Rate Limiting** configurável por IP/endpoint
-- 📝 **Logging** estruturado em JSON com mascaramento de dados sensíveis
-- 📈 **Métricas** de latência e status HTTP
-- 🐳 **Docker Ready** com docker-compose
-- ✅ **Testes** com PHPUnit + PHPStan (Level 6)
+-  **Autenticação HMAC-SHA256** com suporte a API Keys da Binance
+-  **Market Data** - Preços, Order Book, Trades, Klines
+-  **Conta** - Saldos, Histórico de Ordens, Status
+-  **Trading** - Criar/Cancelar Ordens, OCO, Test Orders
+-  **Cache inteligente** para Exchange Info
+-  **Rate Limiting** configurável por IP/endpoint
+-  **Logging** estruturado em JSON com mascaramento de dados sensíveis
+-  **Métricas** de latência e status HTTP
+-  **Docker Ready** com docker-compose
+-  **Testes** com PHPUnit + PHPStan (Level 6)
 
 ---
 
-## 📦 Instalação
+##  Instalação
 
 ### Requisitos
 - PHP 8.1+ com extensão cURL habilitada
@@ -61,7 +61,7 @@ A API estará disponível em `http://localhost:8000`
 
 ---
 
-## 🗂️ Arquitetura
+##  Arquitetura
 
 ```
 binance-api-php/
@@ -141,7 +141,7 @@ binance-api-php/
 
 ---
 
-## ⚙️ Configuração
+## Configuração
 
 Crie um arquivo `.env` na raiz do projeto:
 
@@ -187,9 +187,9 @@ METRICS_ENABLED=true
 
 ---
 
-## 📡 Endpoints
+##  Endpoints
 
-### 🌐 General
+###  General
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
@@ -197,7 +197,7 @@ METRICS_ENABLED=true
 | `GET` | `/api/general/time` | Hora do servidor Binance |
 | `GET` | `/api/general/exchange-info` | Info de câmbio e símbolos |
 
-### 📊 Market Data (Públicos)
+###  Market Data (Públicos)
 
 | Método | Endpoint | Parâmetros | Descrição |
 |--------|----------|------------|-----------|
@@ -213,7 +213,7 @@ METRICS_ENABLED=true
 
 **Intervalos de Klines:** `1s`, `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M`
 
-### 💼 Account (Autenticados)
+###  Account (Autenticados)
 
 | Método | Endpoint | Parâmetros | Descrição |
 |--------|----------|------------|-----------|
@@ -226,7 +226,7 @@ METRICS_ENABLED=true
 | `GET` | `/api/account/api-trading-status` | - | Status de trading |
 | `GET` | `/api/account/capital-config` | - | Config de capital |
 
-### 💹 Trading (Autenticados)
+###  Trading (Autenticados)
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
@@ -240,7 +240,7 @@ METRICS_ENABLED=true
 | `DELETE` | `/api/trading/cancel-oco` | Cancelar OCO |
 | `POST` | `/api/trading/cancel-replace` | Cancel e cria nova ordem |
 
-### 🔧 Sistema
+###  Sistema
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
@@ -249,7 +249,7 @@ METRICS_ENABLED=true
 
 ---
 
-## 📝 Exemplos de Uso
+##  Exemplos de Uso
 
 ### Criar Ordem LIMIT
 
@@ -305,7 +305,7 @@ curl "http://localhost:8000/api/account/balance?api_key=...&secret_key=...&asset
 
 ---
 
-## 🐳 Docker
+##  Docker
 
 ### Usando docker-compose
 
@@ -331,7 +331,7 @@ docker run -p 8000:80 -v ./storage:/var/www/html/storage binance-api-php
 
 ---
 
-## 🧪 Testes
+##  Testes
 
 ```bash
 # Executar todos os testes
@@ -346,7 +346,7 @@ vendor/bin/phpstan analyse
 
 ---
 
-## 📊 Tipos de Ordem
+##  Tipos de Ordem
 
 | Tipo | Parâmetros Obrigatórios |
 |------|------------------------|
@@ -368,7 +368,7 @@ vendor/bin/phpstan analyse
 
 ---
 
-## 🔒 Segurança
+##  Segurança
 
 - ⚠️ **Nunca** commite suas API Keys
 - Use variáveis de ambiente ou `.env` (já no `.gitignore`)
@@ -378,7 +378,7 @@ vendor/bin/phpstan analyse
 
 ---
 
-## 🤝 Contribuindo
+##  Contribuindo
 
 1. Fork o projeto
 2. Crie sua feature branch (`git checkout -b feature/AmazingFeature`)
@@ -388,7 +388,7 @@ vendor/bin/phpstan analyse
 
 ---
 
-## 📄 Licença
+##  Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 

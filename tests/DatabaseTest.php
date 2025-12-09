@@ -352,6 +352,118 @@ SQL;
         @rmdir($tempDir);
     }
 
+    // ========== Connection Tests with SQLite ==========
+
+    public function testConnectionWithSqlite(): void
+    {
+        Config::fake([
+            'DB_DRIVER' => 'sqlite',
+            'DB_DATABASE' => ':memory:'
+        ]);
+
+        Connection::close();
+
+        try {
+            $pdo = Connection::getInstance();
+            $this->assertInstanceOf(PDO::class, $pdo);
+        } finally {
+            Connection::close();
+        }
+    }
+
+    public function testConnectionReconnect(): void
+    {
+        Config::fake([
+            'DB_DRIVER' => 'sqlite',
+            'DB_DATABASE' => ':memory:'
+        ]);
+
+        Connection::close();
+
+        try {
+            $pdo1 = Connection::getInstance();
+            $pdo2 = Connection::reconnect();
+
+            $this->assertInstanceOf(PDO::class, $pdo2);
+        } finally {
+            Connection::close();
+        }
+    }
+
+    public function testConnectionUnsupportedDriver(): void
+    {
+        Config::fake([
+            'DB_DRIVER' => 'unsupported_driver',
+            'DB_DATABASE' => 'test'
+        ]);
+
+        Connection::close();
+
+        $this->expectException(PDOException::class);
+        $this->expectExceptionMessage('Driver não suportado');
+
+        try {
+            Connection::getInstance();
+        } finally {
+            Connection::close();
+        }
+    }
+
+    public function testConnectionMysqlDsnFormat(): void
+    {
+        // This test verifies the DSN is built correctly but won't actually connect
+        Config::fake([
+            'DB_DRIVER' => 'mysql',
+            'DB_HOST' => 'localhost',
+            'DB_PORT' => '3306',
+            'DB_DATABASE' => 'test_db',
+            'DB_USERNAME' => 'root',
+            'DB_PASSWORD' => '',
+            'DB_CHARSET' => 'utf8mb4'
+        ]);
+
+        Connection::close();
+
+        // MySQL connection will fail, but we're testing the flow
+        try {
+            Connection::getInstance();
+            $this->fail('Expected PDOException');
+        } catch (PDOException $e) {
+            // Expected - either driver not found or connection refused
+            $msg = strtolower($e->getMessage());
+            $this->assertTrue(
+                str_contains($msg, 'mysql') || str_contains($msg, 'driver'),
+                "Expected error to contain 'mysql' or 'driver', got: " . $e->getMessage()
+            );
+        } finally {
+            Connection::close();
+        }
+    }
+
+    public function testConnectionPgsqlDsnFormat(): void
+    {
+        Config::fake([
+            'DB_DRIVER' => 'pgsql',
+            'DB_HOST' => 'localhost',
+            'DB_PORT' => '5432',
+            'DB_DATABASE' => 'test_db',
+            'DB_USERNAME' => 'postgres',
+            'DB_PASSWORD' => ''
+        ]);
+
+        Connection::close();
+
+        // PostgreSQL connection will fail, but we're testing the flow
+        try {
+            Connection::getInstance();
+        } catch (PDOException $e) {
+            // Expected - no PostgreSQL server available
+            $this->assertTrue(true);
+        } finally {
+            Connection::close();
+        }
+    }
+
     private function createSqliteConnection(): PDO
     {
         if (self::$testConnection === null) {

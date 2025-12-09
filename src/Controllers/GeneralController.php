@@ -3,12 +3,32 @@
 namespace BinanceAPI\Controllers;
 
 use BinanceAPI\BinanceClient;
+use BinanceAPI\Contracts\ClientInterface;
 use BinanceAPI\Validation;
 use BinanceAPI\Cache;
 use BinanceAPI\Config;
 
 class GeneralController
 {
+    private ?ClientInterface $client;
+    private ?Cache $cache;
+
+    public function __construct(?ClientInterface $client = null, ?Cache $cache = null)
+    {
+        $this->client = $client;
+        $this->cache = $cache;
+    }
+
+    private function getClient(): ClientInterface
+    {
+        return $this->client ?? new BinanceClient();
+    }
+
+    private function getCache(): Cache
+    {
+        return $this->cache ?? new Cache();
+    }
+
     /**
      * Testa conectividade com a API Binance
      * GET /api/general/ping
@@ -18,8 +38,7 @@ class GeneralController
     public function ping(): array
     {
         try {
-            $client = new BinanceClient();
-            $response = $client->get('/api/v3/ping');
+            $response = $this->getClient()->get('/api/v3/ping');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -39,8 +58,7 @@ class GeneralController
     public function time(): array
     {
         try {
-            $client = new BinanceClient();
-            $response = $client->get('/api/v3/time');
+            $response = $this->getClient()->get('/api/v3/time');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -61,7 +79,7 @@ class GeneralController
     public function exchangeInfo(array $params): array
     {
         try {
-            $cache = new Cache();
+            $cache = $this->getCache();
             $ttl = (int)Config::get('CACHE_EXCHANGEINFO_TTL', 30);
             $cacheKey = 'exchangeInfo:' . md5(json_encode($params));
 
@@ -73,8 +91,6 @@ class GeneralController
                     'cached' => true
                 ];
             }
-
-            $client = new BinanceClient();
 
             $options = [];
             $symbol = $params['symbol'] ?? null;
@@ -92,7 +108,7 @@ class GeneralController
                     : strtoupper((string)$permissions);
             }
 
-            $response = $client->get('/api/v3/exchangeInfo', $options);
+            $response = $this->getClient()->get('/api/v3/exchangeInfo', $options);
 
             if (!isset($response['success']) || $response['success'] !== false) {
                 $cache->set($cacheKey, $response);

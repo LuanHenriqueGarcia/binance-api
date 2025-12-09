@@ -78,4 +78,44 @@ class MetricsTest extends TestCase
 
         $this->assertGreaterThanOrEqual($initialCount + 2, $newSnapshot['latency_ms_count']);
     }
+
+    public function testLatencyCapAt100(): void
+    {
+        // Record 105 requests to test the cap at 100
+        for ($i = 0; $i < 105; $i++) {
+            Metrics::record(200, 10);
+        }
+
+        $snapshot = Metrics::snapshot();
+
+        // Should be capped at 100
+        $this->assertLessThanOrEqual(100, $snapshot['latency_ms_count']);
+    }
+
+    public function testRecordNon2xx3xx4xx5xxStatus(): void
+    {
+        // Record 1xx status (informational)
+        Metrics::record(100, 50);
+        Metrics::record(101, 50);
+
+        // Record 3xx status (redirect)
+        Metrics::record(301, 50);
+        Metrics::record(302, 50);
+
+        $snapshot = Metrics::snapshot();
+
+        // These shouldn't count towards 2xx, 4xx, or 5xx
+        $this->assertArrayHasKey('http_2xx', $snapshot);
+        $this->assertArrayHasKey('http_4xx', $snapshot);
+        $this->assertArrayHasKey('http_5xx', $snapshot);
+    }
+
+    public function testSnapshotWithNoRecords(): void
+    {
+        // Get snapshot - latency average with no records should be 0
+        $snapshot = Metrics::snapshot();
+
+        $this->assertIsArray($snapshot);
+        $this->assertIsInt($snapshot['latency_ms_avg_last_100']);
+    }
 }

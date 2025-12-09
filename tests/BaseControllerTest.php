@@ -262,4 +262,135 @@ class BaseControllerTest extends TestCase
 
         $this->assertTrue($result);
     }
+
+    public function testGetBoolParamIntValue(): void
+    {
+        $params = ['enabled' => 1];
+
+        $result = $this->controller->testGetBoolParam($params, 'enabled');
+
+        $this->assertTrue($result);
+    }
+
+    public function testGetBoolParamZeroValue(): void
+    {
+        $params = ['enabled' => 0];
+
+        $result = $this->controller->testGetBoolParam($params, 'enabled');
+
+        $this->assertFalse($result);
+    }
+
+    // ========== Response Methods Tests ==========
+
+    public function testSuccessReturnsResponse(): void
+    {
+        $result = $this->controller->testSuccess(['data' => 'value']);
+
+        $this->assertInstanceOf(Response::class, $result);
+        $this->assertSame(200, $result->getStatusCode());
+        $data = $result->getData();
+        $this->assertTrue($data['success']);
+    }
+
+    public function testSuccessWithEmptyData(): void
+    {
+        $result = $this->controller->testSuccess();
+
+        $this->assertInstanceOf(Response::class, $result);
+        $data = $result->getData();
+        $this->assertTrue($data['success']);
+        $this->assertEmpty($data['data']);
+    }
+
+    public function testErrorReturnsResponse(): void
+    {
+        $result = $this->controller->testError('Something went wrong', 400);
+
+        $this->assertInstanceOf(Response::class, $result);
+        $this->assertSame(400, $result->getStatusCode());
+        $data = $result->getData();
+        $this->assertFalse($data['success']);
+        $this->assertSame('Something went wrong', $data['error']);
+    }
+
+    public function testErrorWithCode(): void
+    {
+        $result = $this->controller->testError('Invalid symbol', 400, -1121);
+
+        $this->assertInstanceOf(Response::class, $result);
+        $data = $result->getData();
+        $this->assertSame(-1121, $data['code']);
+    }
+
+    public function testNotFoundReturnsResponse(): void
+    {
+        $result = $this->controller->testNotFound();
+
+        $this->assertInstanceOf(Response::class, $result);
+        $this->assertSame(404, $result->getStatusCode());
+        $data = $result->getData();
+        $this->assertFalse($data['success']);
+        $this->assertStringContainsString('não encontrado', $data['error']);
+    }
+
+    public function testNotFoundWithCustomMessage(): void
+    {
+        $result = $this->controller->testNotFound('Ordem não encontrada');
+
+        $this->assertInstanceOf(Response::class, $result);
+        $data = $result->getData();
+        $this->assertSame('Ordem não encontrada', $data['error']);
+    }
+
+    // ========== Edge Cases ==========
+
+    public function testFormatResponseSuccessTrue(): void
+    {
+        $data = ['success' => true, 'data' => ['foo' => 'bar']];
+        $result = $this->controller->testFormatResponse($data);
+
+        // When success is already true, formatResponse wraps it again
+        $this->assertTrue($result['success']);
+        $this->assertArrayHasKey('data', $result);
+    }
+
+    public function testGetIntParamFromIntValue(): void
+    {
+        $params = ['limit' => 500];
+
+        $result = $this->controller->testGetIntParam($params, 'limit');
+
+        $this->assertSame(500, $result);
+    }
+
+    public function testGetStringParamFromIntValue(): void
+    {
+        $params = ['value' => 123];
+
+        $result = $this->controller->testGetStringParam($params, 'value');
+
+        $this->assertSame('123', $result);
+    }
+
+    public function testValidateRequiredEmptyArray(): void
+    {
+        $params = ['symbol' => 'BTCUSDT'];
+        $required = [];
+
+        $result = $this->controller->testValidateRequired($params, $required);
+
+        $this->assertNull($result);
+    }
+
+    public function testValidateRequiredWithNullValue(): void
+    {
+        $params = ['symbol' => null];
+        $required = ['symbol'];
+
+        $result = $this->controller->testValidateRequired($params, $required);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('symbol', $result);
+    }
 }

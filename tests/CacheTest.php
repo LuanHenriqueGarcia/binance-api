@@ -127,4 +127,43 @@ class CacheTest extends TestCase
 
         $this->assertSame(['new' => 'data'], $result);
     }
+
+    public function testGetWithCorruptedFile(): void
+    {
+        // Write invalid JSON to cache file
+        $file = $this->cacheDir . '/' . md5('corrupted') . '.json';
+        file_put_contents($file, 'not valid json');
+
+        $result = $this->cache->get('corrupted', 3600);
+
+        $this->assertNull($result);
+    }
+
+    public function testGetWithNonArrayJson(): void
+    {
+        // Write a string JSON to cache file (not an array)
+        $file = $this->cacheDir . '/' . md5('string_json') . '.json';
+        file_put_contents($file, '"just a string"');
+
+        $result = $this->cache->get('string_json', 3600);
+
+        $this->assertNull($result);
+    }
+
+    public function testGetDeletesExpiredFile(): void
+    {
+        $data = ['will' => 'expire'];
+        $this->cache->set('expire_test', $data);
+
+        // Make the file old
+        $file = $this->cacheDir . '/' . md5('expire_test') . '.json';
+        touch($file, time() - 7200);
+
+        // Get should delete the expired file
+        $result = $this->cache->get('expire_test', 3600);
+        $this->assertNull($result);
+
+        // File should be deleted
+        $this->assertFileDoesNotExist($file);
+    }
 }

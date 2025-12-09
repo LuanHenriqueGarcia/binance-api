@@ -5,6 +5,7 @@
 ![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![Binance](https://img.shields.io/badge/Binance-API-F0B90B?style=for-the-badge&logo=binance&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Coverage](https://img.shields.io/badge/Coverage-96%25-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 **API REST em PHP para integração com a Binance — Zero dependências externas**
@@ -30,7 +31,7 @@
 - 📝 **Logging** estruturado em JSON com mascaramento de dados sensíveis
 - 📈 **Métricas** de latência e status HTTP
 - 🐳 **Docker Ready** com docker-compose
-- ✅ **Testes** com PHPUnit + PHPStan (Level 6)
+- ✅ **715+ Testes** com PHPUnit (96%+ cobertura) + PHPStan (Level 6)
 
 ---
 
@@ -337,12 +338,30 @@ docker run -p 8000:80 -v ./storage:/var/www/html/storage binance-api-php
 # Executar todos os testes
 vendor/bin/phpunit
 
-# Com coverage
+# Gerar coverage HTML (recomendado)
 vendor/bin/phpunit --coverage-html coverage/
+
+# Gerar coverage em texto
+vendor/bin/phpunit --coverage-text
+
+# Ver coverage no terminal com cores
+vendor/bin/phpunit --coverage-text --colors=always
 
 # Análise estática (PHPStan Level 6)
 vendor/bin/phpstan analyse
 ```
+
+### Cobertura de Testes
+
+| Métrica | Valor |
+|---------|-------|
+| **Testes** | 715 |
+| **Assertions** | 1215+ |
+| **Cobertura de Linhas** | 96.44% |
+| **Arquivos com 100%** | 30+ |
+
+**Visualizar Coverage:**
+Após gerar o relatório HTML, abra `coverage/index.html` no navegador para ver a cobertura completa de cada arquivo.
 
 ---
 

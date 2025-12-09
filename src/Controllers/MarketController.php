@@ -1,11 +1,28 @@
 <?php
 
 namespace BinanceAPI\Controllers;
+
 use BinanceAPI\BinanceClient;
+use BinanceAPI\Contracts\ClientInterface;
 use BinanceAPI\Validation;
 
 class MarketController
 {
+    private ?ClientInterface $client;
+
+    public function __construct(?ClientInterface $client = null)
+    {
+        $this->client = $client;
+    }
+
+    private function getClient(?string $apiKey = null, ?string $secretKey = null): ClientInterface
+    {
+        if ($this->client !== null) {
+            return $this->client;
+        }
+        return new BinanceClient($apiKey, $secretKey);
+    }
+
     /**
      * Obtém o preço atual de um símbolo
      * GET /api/market/ticker?symbol=BTCUSDT
@@ -20,8 +37,7 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
-            $response = $client->get('/api/v3/ticker/24hr', [
+            $response = $this->getClient()->get('/api/v3/ticker/24hr', [
                 'symbol' => $params['symbol']
             ]);
 
@@ -59,10 +75,9 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
             $limit = $params['limit'] ?? 100;
 
-            $response = $client->get('/api/v3/depth', [
+            $response = $this->getClient()->get('/api/v3/depth', [
                 'symbol' => $params['symbol'],
                 'limit' => $limit
             ]);
@@ -90,10 +105,9 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
             $limit = $params['limit'] ?? 500;
 
-            $response = $client->get('/api/v3/trades', [
+            $response = $this->getClient()->get('/api/v3/trades', [
                 'symbol' => $params['symbol'],
                 'limit' => $limit
             ]);
@@ -122,7 +136,7 @@ class MarketController
             }
 
             $apiKey = $params['api_key'] ?? null;
-            $client = $apiKey ? new BinanceClient($apiKey, null) : new BinanceClient();
+            $client = $this->getClient($apiKey, null);
             $limit = $params['limit'] ?? 500;
 
             $response = $client->get('/api/v3/historicalTrades', [
@@ -154,8 +168,7 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
-            $response = $client->get('/api/v3/avgPrice', [
+            $response = $this->getClient()->get('/api/v3/avgPrice', [
                 'symbol' => $params['symbol']
             ]);
 
@@ -178,13 +191,12 @@ class MarketController
     public function bookTicker(array $params): array
     {
         try {
-            $client = new BinanceClient();
             $options = [];
             if (!empty($params['symbol'])) {
                 $options['symbol'] = $params['symbol'];
             }
 
-            $response = $client->get('/api/v3/ticker/bookTicker', $options);
+            $response = $this->getClient()->get('/api/v3/ticker/bookTicker', $options);
             return $this->formatResponse($response);
         } catch (\Exception $e) {
             return [
@@ -208,10 +220,9 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
             $limit = $params['limit'] ?? 500;
 
-            $response = $client->get('/api/v3/aggTrades', [
+            $response = $this->getClient()->get('/api/v3/aggTrades', [
                 'symbol' => $params['symbol'],
                 'limit' => $limit,
                 'startTime' => $params['startTime'] ?? null,
@@ -242,10 +253,9 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
             $limit = $params['limit'] ?? 500;
 
-            $response = $client->get('/api/v3/klines', [
+            $response = $this->getClient()->get('/api/v3/klines', [
                 'symbol' => $params['symbol'],
                 'interval' => $params['interval'],
                 'limit' => $limit,
@@ -276,10 +286,9 @@ class MarketController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient();
             $limit = $params['limit'] ?? 500;
 
-            $response = $client->get('/api/v3/uiKlines', [
+            $response = $this->getClient()->get('/api/v3/uiKlines', [
                 'symbol' => $params['symbol'],
                 'interval' => $params['interval'],
                 'limit' => $limit,
@@ -314,7 +323,6 @@ class MarketController
                 ];
             }
 
-            $client = new BinanceClient();
             $window = $params['windowSize'] ?? '1d';
 
             $options = [
@@ -333,7 +341,7 @@ class MarketController
                 $options['symbols'] = $params['symbols'];
             }
 
-            $response = $client->get('/api/v3/ticker', $options);
+            $response = $this->getClient()->get('/api/v3/ticker', $options);
             return $this->formatResponse($response);
         } catch (\Exception $e) {
             return [
@@ -353,13 +361,12 @@ class MarketController
     public function tickerPrice(array $params): array
     {
         try {
-            $client = new BinanceClient();
             $options = [];
             if (!empty($params['symbol'])) {
                 $options['symbol'] = $params['symbol'];
             }
 
-            $response = $client->get('/api/v3/ticker/price', $options);
+            $response = $this->getClient()->get('/api/v3/ticker/price', $options);
             return $this->formatResponse($response);
         } catch (\Exception $e) {
             return [
@@ -379,13 +386,12 @@ class MarketController
     public function ticker24h(array $params): array
     {
         try {
-            $client = new BinanceClient();
             $options = [];
             if (!empty($params['symbol'])) {
                 $options['symbol'] = $params['symbol'];
             }
 
-            $response = $client->get('/api/v3/ticker/24hr', $options);
+            $response = $this->getClient()->get('/api/v3/ticker/24hr', $options);
             return $this->formatResponse($response);
         } catch (\Exception $e) {
             return [

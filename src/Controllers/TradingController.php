@@ -3,10 +3,30 @@
 namespace BinanceAPI\Controllers;
 
 use BinanceAPI\BinanceClient;
+use BinanceAPI\Contracts\ClientInterface;
 use BinanceAPI\Validation;
 
 class TradingController
 {
+    private ?ClientInterface $client;
+
+    public function __construct(?ClientInterface $client = null)
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * Retorna o cliente (injetado ou novo)
+     */
+    private function getClient(?string $apiKey = null, ?string $secretKey = null): ClientInterface
+    {
+        if ($this->client !== null) {
+            return $this->client;
+        }
+
+        return new BinanceClient($apiKey, $secretKey);
+    }
+
     /**
      * Cria uma nova ordem
      * POST /api/trading/create-order
@@ -31,7 +51,7 @@ class TradingController
                 return $validated;
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
 
             $response = $client->post('/api/v3/order', $validated['orderParams']);
 
@@ -68,7 +88,7 @@ class TradingController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
 
             $response = $client->delete('/api/v3/order', [
                 'symbol' => $params['symbol'],
@@ -99,7 +119,7 @@ class TradingController
                 return $validated;
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->post('/api/v3/order/test', $validated['orderParams']);
 
             return $this->formatResponse($response);
@@ -136,7 +156,7 @@ class TradingController
                 ];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->get('/api/v3/order', [
                 'symbol' => $params['symbol'],
                 'orderId' => $params['orderId'] ?? null,
@@ -170,7 +190,7 @@ class TradingController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->delete('/api/v3/openOrders', [
                 'symbol' => $params['symbol'],
             ]);
@@ -225,7 +245,7 @@ class TradingController
                 'stopIcebergQty' => $params['stopIcebergQty'] ?? null,
             ];
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->post('/api/v3/order/oco', $payload);
 
             return $this->formatResponse($response);
@@ -251,7 +271,7 @@ class TradingController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->get('/api/v3/allOrderList', [
                 'fromId' => $params['fromId'] ?? null,
                 'startTime' => $params['startTime'] ?? null,
@@ -289,7 +309,7 @@ class TradingController
                 ];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->delete('/api/v3/orderList', [
                 'orderListId' => $params['orderListId'] ?? null,
                 'listClientOrderId' => $params['listClientOrderId'] ?? null,
@@ -320,7 +340,7 @@ class TradingController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->get('/sapi/v1/rateLimit/order');
 
             return $this->formatResponse($response);
@@ -350,7 +370,7 @@ class TradingController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->get('/sapi/v1/account/commission', [
                 'symbol' => $params['symbol']
             ]);
@@ -411,7 +431,7 @@ class TradingController
                 'newOrderRespType' => $params['newOrderRespType'] ?? null,
             ]);
 
-            $client = new BinanceClient($params['api_key'], $params['secret_key']);
+            $client = $this->getClient($params['api_key'], $params['secret_key']);
             $response = $client->post('/api/v3/order/cancelReplace', $payload);
 
             return $this->formatResponse($response);

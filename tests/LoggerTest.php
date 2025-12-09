@@ -134,4 +134,91 @@ class LoggerTest extends TestCase
         @unlink($newLogFile);
         @rmdir($newDir);
     }
+
+    public function testMasksXMbxApiKey(): void
+    {
+        Config::fake([
+            'APP_DEBUG' => 'true',
+            'APP_LOG_FILE' => $this->logFile
+        ]);
+
+        Logger::info([
+            'X-MBX-APIKEY' => 'abcdefghijklmnop1234567890'
+        ]);
+
+        $content = file_get_contents($this->logFile);
+
+        // Should NOT contain full API key
+        $this->assertStringNotContainsString('abcdefghijklmnop1234567890', $content);
+        // Should contain masked version
+        $this->assertStringContainsString('abcd****', $content);
+    }
+
+    public function testErrorLogsWithoutLogFile(): void
+    {
+        Config::fake([
+            'APP_DEBUG' => 'false'
+            // No APP_LOG_FILE - should use error_log()
+        ]);
+
+        // This should not throw
+        Logger::error(['message' => 'Error without file']);
+
+        // We can't easily verify error_log was called, but test shouldn't fail
+        $this->assertTrue(true);
+    }
+
+    public function testInfoDoesNotLogWithoutDebugAndFile(): void
+    {
+        Config::fake([
+            'APP_DEBUG' => 'false'
+            // No APP_LOG_FILE
+        ]);
+
+        Logger::info(['message' => 'Should not log']);
+
+        // No file should be created
+        $this->assertFileDoesNotExist($this->logFile);
+    }
+
+    public function testLogWithMultipleContextItems(): void
+    {
+        Config::fake([
+            'APP_DEBUG' => 'true',
+            'APP_LOG_FILE' => $this->logFile
+        ]);
+
+        Logger::info([
+            'event' => 'test_event',
+            'user_id' => 123,
+            'action' => 'create_order',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $content = file_get_contents($this->logFile);
+        $this->assertStringContainsString('test_event', $content);
+        $this->assertStringContainsString('123', $content);
+        $this->assertStringContainsString('create_order', $content);
+        $this->assertStringContainsString('BTCUSDT', $content);
+    }
+
+    public function testMaskDoesNotAffectNonSensitiveKeys(): void
+    {
+        Config::fake([
+            'APP_DEBUG' => 'true',
+            'APP_LOG_FILE' => $this->logFile
+        ]);
+
+        Logger::info([
+            'symbol' => 'BTCUSDT',
+            'price' => '50000.00',
+            'quantity' => '0.001'
+        ]);
+
+        $content = file_get_contents($this->logFile);
+        // Non-sensitive data should NOT be masked
+        $this->assertStringContainsString('BTCUSDT', $content);
+        $this->assertStringContainsString('50000.00', $content);
+        $this->assertStringContainsString('0.001', $content);
+    }
 }

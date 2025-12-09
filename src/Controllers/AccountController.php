@@ -3,11 +3,27 @@
 namespace BinanceAPI\Controllers;
 
 use BinanceAPI\BinanceClient;
+use BinanceAPI\Contracts\ClientInterface;
 use BinanceAPI\Config;
 use BinanceAPI\Validation;
 
 class AccountController
 {
+    private ?ClientInterface $client;
+
+    public function __construct(?ClientInterface $client = null)
+    {
+        $this->client = $client;
+    }
+
+    private function getClient(?string $apiKey = null, ?string $secretKey = null): ClientInterface
+    {
+        if ($this->client !== null) {
+            return $this->client;
+        }
+        return new BinanceClient($apiKey, $secretKey);
+    }
+
     /**
      * Obtém informações da conta Binance
      * GET /api/account/info?api_key=xxx&secret_key=yyy
@@ -18,7 +34,6 @@ class AccountController
     public function getAccountInfo(array $params): array
     {
         try {
-            // Tentar usar chaves do .env primeiro, depois dos parâmetros
             $apiKey = $params['api_key'] ?? Config::getBinanceApiKey();
             $secretKey = $params['secret_key'] ?? Config::getBinanceSecretKey();
 
@@ -29,8 +44,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/api/v3/account');
+            $response = $this->getClient($apiKey, $secretKey)->get('/api/v3/account');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -51,7 +65,6 @@ class AccountController
     public function getOpenOrders(array $params): array
     {
         try {
-            // Tentar usar chaves do .env primeiro, depois dos parâmetros
             $apiKey = $params['api_key'] ?? Config::getBinanceApiKey();
             $secretKey = $params['secret_key'] ?? Config::getBinanceSecretKey();
 
@@ -62,14 +75,12 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-
             $options = [];
             if (!empty($params['symbol'])) {
                 $options['symbol'] = $params['symbol'];
             }
 
-            $response = $client->get('/api/v3/openOrders', $options);
+            $response = $this->getClient($apiKey, $secretKey)->get('/api/v3/openOrders', $options);
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -90,7 +101,6 @@ class AccountController
     public function getOrderHistory(array $params): array
     {
         try {
-            // Tentar usar chaves do .env primeiro, depois dos parâmetros
             $apiKey = $params['api_key'] ?? Config::getBinanceApiKey();
             $secretKey = $params['secret_key'] ?? Config::getBinanceSecretKey();
 
@@ -105,10 +115,9 @@ class AccountController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
             $limit = $params['limit'] ?? 500;
 
-            $response = $client->get('/api/v3/allOrders', [
+            $response = $this->getClient($apiKey, $secretKey)->get('/api/v3/allOrders', [
                 'symbol' => $params['symbol'],
                 'limit' => $limit
             ]);
@@ -143,14 +152,12 @@ class AccountController
                 return ['success' => false, 'error' => $error . ' (ex: ETH, BTC, USDT)'];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/api/v3/account');
+            $response = $this->getClient($apiKey, $secretKey)->get('/api/v3/account');
 
             if (isset($response['success']) && $response['success'] === false) {
                 return $response;
             }
 
-            // Procurar o ativo
             $asset = strtoupper($params['asset']);
             foreach ($response['balances'] as $balance) {
                 if ($balance['asset'] === $asset) {
@@ -202,9 +209,7 @@ class AccountController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-
-            $response = $client->get('/api/v3/myTrades', [
+            $response = $this->getClient($apiKey, $secretKey)->get('/api/v3/myTrades', [
                 'symbol' => $params['symbol'],
                 'limit' => $params['limit'] ?? 500,
                 'fromId' => $params['fromId'] ?? null,
@@ -241,8 +246,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/account/status');
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/account/status');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -273,8 +277,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/account/apiTradingStatus');
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/account/apiTradingStatus');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -305,8 +308,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/capital/config/getall');
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/capital/config/getall');
 
             return $this->formatResponse($response);
         } catch (\Exception $e) {
@@ -356,8 +358,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->post('/sapi/v1/asset/dust', [
+            $response = $this->getClient($apiKey, $secretKey)->post('/sapi/v1/asset/dust', [
                 'assets' => json_encode(array_values($assets))
             ]);
 
@@ -390,8 +391,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/asset/assetDividend', [
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/asset/assetDividend', [
                 'asset' => $params['asset'] ?? null,
                 'startTime' => $params['startTime'] ?? null,
                 'endTime' => $params['endTime'] ?? null,
@@ -431,8 +431,7 @@ class AccountController
                 return ['success' => false, 'error' => $error];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/convert/transferable', [
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/convert/transferable', [
                 'fromAsset' => $params['fromAsset'],
                 'toAsset' => $params['toAsset'],
             ]);
@@ -466,8 +465,7 @@ class AccountController
                 ];
             }
 
-            $client = new BinanceClient($apiKey, $secretKey);
-            $response = $client->get('/sapi/v1/c2c/orderMatch/listUserOrderHistory', [
+            $response = $this->getClient($apiKey, $secretKey)->get('/sapi/v1/c2c/orderMatch/listUserOrderHistory', [
                 'fiatSymbol' => $params['fiatSymbol'] ?? null,
                 'tradeType' => $params['tradeType'] ?? null,
                 'startTimestamp' => $params['startTimestamp'] ?? null,

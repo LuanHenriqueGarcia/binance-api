@@ -111,4 +111,49 @@ class RateLimiterTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $result['retryAfter']);
         $this->assertLessThanOrEqual(60, $result['retryAfter']);
     }
+
+    public function testHitWithNullParams(): void
+    {
+        // Test with all null params (uses Config defaults)
+        Config::fake([
+            'STORAGE_PATH' => $this->testDir,
+            'RATE_LIMIT_MAX' => '10',
+            'RATE_LIMIT_WINDOW' => '30'
+        ]);
+
+        $limiter = new RateLimiter($this->testDir);
+        $result = $limiter->hit('null_params_test');
+
+        $this->assertTrue($result['allowed']);
+        $this->assertNull($result['retryAfter']);
+    }
+
+    public function testRateLimiterWithExistingData(): void
+    {
+        $limiter = new RateLimiter($this->testDir, 5, 60);
+
+        // Create some hits
+        $limiter->hit('existing_data');
+        $limiter->hit('existing_data');
+
+        // Create new limiter instance (simulating next request)
+        $limiter2 = new RateLimiter($this->testDir, 5, 60);
+        $result = $limiter2->hit('existing_data');
+
+        $this->assertTrue($result['allowed']);
+    }
+
+    public function testRateLimiterRespectsWindow(): void
+    {
+        // Very short window
+        $limiter = new RateLimiter($this->testDir, 2, 1);
+
+        $limiter->hit('window_test');
+        $limiter->hit('window_test');
+        $result = $limiter->hit('window_test');
+
+        $this->assertFalse($result['allowed']);
+        $this->assertNotNull($result['retryAfter']);
+        $this->assertLessThanOrEqual(1, $result['retryAfter']);
+    }
 }

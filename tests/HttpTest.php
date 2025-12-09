@@ -368,4 +368,152 @@ class HttpTest extends TestCase
         $this->assertSame($response, $result);
         $this->assertSame(201, $response->getStatusCode());
     }
+
+    public function testResponseErrorWithAllParams(): void
+    {
+        $response = Response::error('Test error', 422, -1000, ['field' => 'symbol']);
+
+        $this->assertSame(422, $response->getStatusCode());
+        $data = $response->getData();
+        $this->assertFalse($data['success']);
+        $this->assertSame('Test error', $data['error']);
+        $this->assertSame(-1000, $data['code']);
+        $this->assertSame(['field' => 'symbol'], $data['context']);
+    }
+
+    public function testResponseSuccessWithEmptyData(): void
+    {
+        $response = Response::success([]);
+
+        $data = $response->getData();
+        $this->assertTrue($data['success']);
+        $this->assertSame([], $data['data']);
+    }
+
+    public function testRequestParseHeadersFromServer(): void
+    {
+        $_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
+        $_SERVER['HTTP_ACCEPT'] = 'application/json';
+        
+        $request = new Request('GET', '/');
+        $headers = $request->getHeaders();
+
+        $this->assertSame('application/json', $request->getHeader('content-type'));
+        $this->assertSame('application/json', $request->getHeader('accept'));
+
+        unset($_SERVER['HTTP_CONTENT_TYPE'], $_SERVER['HTTP_ACCEPT']);
+    }
+
+    public function testResponseToJsonFormattedCorrectly(): void
+    {
+        $response = Response::success(['key' => 'value']);
+        $json = $response->toJson();
+
+        // Should be pretty printed with unescaped slashes
+        $this->assertStringContainsString("\n", $json);
+        $this->assertStringNotContainsString('\\/', $json);
+    }
+
+    public function testRequestPathSegmentsWithMultipleSlashes(): void
+    {
+        $request = new Request('GET', '//api//market//ticker//');
+        $segments = $request->getPathSegments();
+
+        $this->assertSame(['api', 'market', 'ticker'], $segments);
+    }
+
+    public function testRequestMultipleSymbolsUppercased(): void
+    {
+        $_GET = ['symbol' => 'btcusdt', 'anotherSymbol' => 'ethusdt'];
+        $request = new Request('GET', '/', null);
+
+        // Only 'symbol' key should be uppercased
+        $this->assertSame('BTCUSDT', $request->get('symbol'));
+        $this->assertSame('ethusdt', $request->get('anotherSymbol'));
+
+        $_GET = [];
+    }
+
+    public function testRequestParseParamsFromPhpInput(): void
+    {
+        // Test POST without params (uses php://input)
+        $request = new Request('POST', '/api/trading', null);
+
+        // Should have empty or parsed params
+        $this->assertIsArray($request->getParams());
+    }
+
+    public function testRequestParseHeadersEmpty(): void
+    {
+        // Without HTTP_ headers in $_SERVER
+        $originalServer = $_SERVER;
+        $keysToRemove = array_filter(array_keys($_SERVER), fn($k) => str_starts_with($k, 'HTTP_'));
+        foreach ($keysToRemove as $key) {
+            unset($_SERVER[$key]);
+        }
+
+        $request = new Request('GET', '/');
+        $headers = $request->getHeaders();
+
+        $this->assertIsArray($headers);
+
+        $_SERVER = $originalServer;
+    }
+
+    public function testRequestNormalizeWithNonStringSymbol(): void
+    {
+        $_GET = ['symbol' => null];
+        $request = new Request('GET', '/', null);
+
+        // Null symbol shouldn't cause errors
+        $this->assertNull($request->get('symbol'));
+
+        $_GET = [];
+    }
+
+    public function testRequestRemoteAddrFallback(): void
+    {
+        $originalServer = $_SERVER;
+        unset($_SERVER['HTTP_X_FORWARDED_FOR']);
+        unset($_SERVER['HTTP_X_REAL_IP']);
+        unset($_SERVER['REMOTE_ADDR']);
+
+        $request = new Request('GET', '/');
+        $ip = $request->getClientIp();
+
+        $this->assertSame('unknown', $ip);
+
+        $_SERVER = $originalServer;
+    }
+
+    public function testRequestDefaultMethodAndPath(): void
+    {
+        $originalServer = $_SERVER;
+        $_SERVER['REQUEST_METHOD'] = 'PUT';
+        $_SERVER['REQUEST_URI'] = '/api/test?param=value';
+
+        $request = new Request(null, null, ['test' => 'data']);
+
+        $this->assertSame('PUT', $request->getMethod());
+        $this->assertSame('/api/test', $request->getPath());
+
+        $_SERVER = $originalServer;
+    }
+
+    public function testResponseSuccessWithMixedData(): void
+    {
+        $response = Response::success('string data');
+
+        $data = $response->getData();
+        $this->assertTrue($data['success']);
+        $this->assertSame('string data', $data['data']);
+    }
+
+    public function testResponseConstructorWithEmptyParams(): void
+    {
+        $response = new Response();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame([], $response->getData());
+    }
 }

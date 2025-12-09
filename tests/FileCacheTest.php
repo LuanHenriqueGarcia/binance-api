@@ -180,4 +180,72 @@ class FileCacheTest extends TestCase
         $this->cache->clear();
         $this->assertTrue(true);
     }
+
+    public function testClearWhenGlobReturnsFalse(): void
+    {
+        // Test with directory that doesn't exist
+        $nonExistentCache = new FileCache('/non/existent/path/cache_' . uniqid());
+
+        // This should handle the glob returning false gracefully
+        $nonExistentCache->clear();
+        $this->assertTrue(true);
+    }
+
+    public function testGetReturnNullOnJsonDecodeFailure(): void
+    {
+        // Write a non-array JSON (e.g., string) to cache file
+        $file = $this->cacheDir . '/' . md5('string_json') . '.json';
+        if (!is_dir($this->cacheDir)) {
+            @mkdir($this->cacheDir, 0777, true);
+        }
+        file_put_contents($file, '"just a string"');
+
+        $result = $this->cache->get('string_json', 3600);
+
+        $this->assertNull($result);
+    }
+
+    public function testCacheWithSpecialCharactersInKey(): void
+    {
+        $key = 'special:key/with\\characters?and=query&params';
+        $data = ['test' => 'data'];
+
+        $this->cache->set($key, $data);
+        $result = $this->cache->get($key, 3600);
+
+        $this->assertSame($data, $result);
+    }
+
+    public function testDeleteExpiredKeyCleanup(): void
+    {
+        // Set a key and then make it expired
+        $data = ['will' => 'expire'];
+        $this->cache->set('expire_delete_test', $data);
+
+        // Make the file old
+        $file = $this->cacheDir . '/' . md5('expire_delete_test') . '.json';
+        touch($file, time() - 7200);
+
+        // Get should delete the expired file
+        $result = $this->cache->get('expire_delete_test', 3600);
+        $this->assertNull($result);
+
+        // File should be deleted
+        $this->assertFileDoesNotExist($file);
+    }
+
+    public function testGetReturnsNullForUnreadableFile(): void
+    {
+        // Write valid JSON to cache file
+        $file = $this->cacheDir . '/' . md5('unreadable') . '.json';
+        if (!is_dir($this->cacheDir)) {
+            @mkdir($this->cacheDir, 0777, true);
+        }
+        file_put_contents($file, '{"test": "data"}');
+
+        // Make file readable but return null JSON (number instead of array)
+        file_put_contents($file, '123');
+        $result = $this->cache->get('unreadable', 3600);
+        $this->assertNull($result);
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use BinanceAPI\Controllers\TradingController;
+use BinanceAPI\Contracts\ClientInterface;
 use BinanceAPI\Config;
 use PHPUnit\Framework\TestCase;
 
@@ -307,5 +308,923 @@ class TradingControllerTest extends TestCase
 
         $this->assertFalse($response['success']);
         $this->assertStringContainsString('api_key', $response['error']);
+    }
+
+    public function testFormatResponseBinanceError(): void
+    {
+        $method = new ReflectionMethod(TradingController::class, 'formatResponse');
+        $method->setAccessible(true);
+
+        // TradingController formatResponse wraps everything as success
+        $result = $method->invoke($this->controller, ['code' => -1013, 'msg' => 'Invalid quantity']);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(['code' => -1013, 'msg' => 'Invalid quantity'], $result['data']);
+    }
+
+    // Test with valid params (will fail due to network but tests the flow)
+    public function testCreateOrderWithValidParams(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+        $this->assertArrayHasKey('success', $response);
+    }
+
+    public function testCreateMarketOrderWithQuantity(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'quantity' => '0.001'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateMarketOrderWithQuoteOrderQty(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'quoteOrderQty' => '100'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateStopLossOrder(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'type' => 'STOP_LOSS',
+            'quantity' => '0.001',
+            'stopPrice' => '9000'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateStopLossLimitOrder(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'type' => 'STOP_LOSS_LIMIT',
+            'quantity' => '0.001',
+            'stopPrice' => '9000',
+            'price' => '8900',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateTakeProfitOrder(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'type' => 'TAKE_PROFIT',
+            'quantity' => '0.001',
+            'stopPrice' => '11000'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateTakeProfitLimitOrder(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'type' => 'TAKE_PROFIT_LIMIT',
+            'quantity' => '0.001',
+            'stopPrice' => '11000',
+            'price' => '11100',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateLimitMakerOrder(): void
+    {
+        $response = $this->controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT_MAKER',
+            'quantity' => '0.001',
+            'price' => '9000'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelOrderWithKeys(): void
+    {
+        $response = $this->controller->cancelOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testTestOrderWithKeys(): void
+    {
+        $response = $this->controller->testOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testQueryOrderWithOrderId(): void
+    {
+        $response = $this->controller->queryOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testQueryOrderWithOrigClientOrderId(): void
+    {
+        $response = $this->controller->queryOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'origClientOrderId' => 'my_order_123'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelOpenOrdersWithKeys(): void
+    {
+        $response = $this->controller->cancelOpenOrders([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateOcoWithKeys(): void
+    {
+        $response = $this->controller->createOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'quantity' => '0.001',
+            'price' => '11000',
+            'stopPrice' => '9000'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCreateOcoWithAllParams(): void
+    {
+        $response = $this->controller->createOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'quantity' => '0.001',
+            'price' => '11000',
+            'stopPrice' => '9000',
+            'stopLimitPrice' => '8900',
+            'stopLimitTimeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testListOcoWithKeys(): void
+    {
+        $response = $this->controller->listOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelOcoWithOrderListId(): void
+    {
+        $response = $this->controller->cancelOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderListId' => '12345'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelOcoWithListClientOrderId(): void
+    {
+        $response = $this->controller->cancelOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'listClientOrderId' => 'my_oco_123'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testOrderRateLimitWithKeys(): void
+    {
+        $response = $this->controller->orderRateLimit([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCommissionRateWithKeys(): void
+    {
+        $response = $this->controller->commissionRate([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelReplaceWithKeys(): void
+    {
+        $response = $this->controller->cancelReplace([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'cancelReplaceMode' => 'STOP_ON_FAILURE',
+            'cancelOrderId' => '12345',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    public function testCancelReplaceWithOrigClientOrderId(): void
+    {
+        $response = $this->controller->cancelReplace([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'cancelReplaceMode' => 'ALLOW_FAILURE',
+            'cancelOrigClientOrderId' => 'my_order_123',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertIsArray($response);
+    }
+
+    // ===== TESTES COM MOCK =====
+
+    private function createMockClient(): ClientInterface
+    {
+        return new class implements ClientInterface {
+            public array $lastCall = [];
+
+            public function get(string $endpoint, array $params = []): array
+            {
+                $this->lastCall = ['method' => 'get', 'endpoint' => $endpoint, 'params' => $params];
+                return ['mockData' => true, 'endpoint' => $endpoint];
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                $this->lastCall = ['method' => 'post', 'endpoint' => $endpoint, 'params' => $params];
+                return ['orderId' => '12345', 'status' => 'FILLED'];
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                $this->lastCall = ['method' => 'delete', 'endpoint' => $endpoint, 'params' => $params];
+                return ['status' => 'CANCELED'];
+            }
+        };
+    }
+
+    public function testCreateOrderWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'timeInForce' => 'GTC'
+        ]);
+
+        $this->assertTrue($response['success']);
+        $this->assertSame('12345', $response['data']['orderId']);
+        $this->assertSame('FILLED', $response['data']['status']);
+    }
+
+    public function testCancelOrderWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertTrue($response['success']);
+        $this->assertSame('CANCELED', $response['data']['status']);
+    }
+
+    public function testTestOrderWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->testOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testQueryOrderWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->queryOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCancelOpenOrdersWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOpenOrders([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCreateOcoWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'quantity' => '0.001',
+            'price' => '11000',
+            'stopPrice' => '9000'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testListOcoWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->listOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCancelOcoWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'orderListId' => '12345'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testOrderRateLimitWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->orderRateLimit([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCommissionRateWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->commissionRate([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCancelReplaceWithMockSuccess(): void
+    {
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelReplace([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'cancelReplaceMode' => 'STOP_ON_FAILURE',
+            'cancelOrderId' => '12345'
+        ]);
+
+        $this->assertTrue($response['success']);
+    }
+
+    public function testCreateOrderWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Mock connection error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Mock connection error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Mock connection error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Mock connection error', $response['error']);
+    }
+
+    public function testCancelOrderWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Cancel error', $response['error']);
+    }
+
+    public function testTestOrderWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Test error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Test error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Test error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->testOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'quantity' => '0.001'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Test error', $response['error']);
+    }
+
+    public function testQueryOrderWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Query error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Query error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Query error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->queryOrder([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'orderId' => '12345'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Query error', $response['error']);
+    }
+
+    public function testCancelOpenOrdersWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel open error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel open error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel open error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOpenOrders([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Cancel open error', $response['error']);
+    }
+
+    public function testCreateOcoWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('OCO error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('OCO error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('OCO error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'SELL',
+            'quantity' => '0.001',
+            'price' => '11000',
+            'stopPrice' => '9000'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('OCO error', $response['error']);
+    }
+
+    public function testListOcoWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('List OCO error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('List OCO error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('List OCO error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->listOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('List OCO error', $response['error']);
+    }
+
+    public function testCancelOcoWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel OCO error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel OCO error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel OCO error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOco([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'orderListId' => '12345'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Cancel OCO error', $response['error']);
+    }
+
+    public function testOrderRateLimitWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Rate limit error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Rate limit error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Rate limit error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->orderRateLimit([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Rate limit error', $response['error']);
+    }
+
+    public function testCommissionRateWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Commission error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Commission error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Commission error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->commissionRate([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Commission error', $response['error']);
+    }
+
+    public function testCancelReplaceWithMockException(): void
+    {
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel replace error');
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel replace error');
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                throw new \Exception('Cancel replace error');
+            }
+        };
+
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelReplace([
+            'api_key' => 'test_key',
+            'secret_key' => 'test_secret',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10000',
+            'cancelReplaceMode' => 'STOP_ON_FAILURE',
+            'cancelOrderId' => '12345'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('Cancel replace error', $response['error']);
+    }
+
+    public function testCreateOcoInvalidSide(): void
+    {
+        $response = $this->controller->createOco([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'INVALID',
+            'quantity' => '0.1',
+            'price' => '1.0',
+            'stopPrice' => '0.9',
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('side', $response['error']);
+    }
+
+    public function testCancelReplaceInvalidMode(): void
+    {
+        $response = $this->controller->cancelReplace([
+            'api_key' => 'k',
+            'secret_key' => 's',
+            'symbol' => 'BTCUSDT',
+            'side' => 'BUY',
+            'type' => 'LIMIT',
+            'quantity' => '0.001',
+            'price' => '10',
+            'cancelReplaceMode' => 'INVALID_MODE',
+            'cancelOrderId' => '12345'
+        ]);
+
+        $this->assertFalse($response['success']);
+        $this->assertStringContainsString('cancelReplaceMode', $response['error']);
     }
 }

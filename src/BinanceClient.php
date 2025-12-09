@@ -3,8 +3,9 @@
 namespace BinanceAPI;
 
 use BinanceAPI\Config;
+use BinanceAPI\Contracts\ClientInterface;
 
-class BinanceClient
+class BinanceClient implements ClientInterface
 {
     private const BASE_URL = 'https://api.binance.com';
     private const TIMEOUT = 10;

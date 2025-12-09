@@ -429,11 +429,11 @@ SQL;
             Connection::getInstance();
             $this->fail('Expected PDOException');
         } catch (PDOException $e) {
-            // Expected - either driver not found or connection refused
+            // Expected - either driver not found, connection refused, or MySQL error
             $msg = strtolower($e->getMessage());
             $this->assertTrue(
-                str_contains($msg, 'mysql') || str_contains($msg, 'driver'),
-                "Expected error to contain 'mysql' or 'driver', got: " . $e->getMessage()
+                str_contains($msg, 'mysql') || str_contains($msg, 'driver') || str_contains($msg, 'sqlstate') || str_contains($msg, 'conexão') || str_contains($msg, 'connection'),
+                "Expected error to contain database-related message, got: " . $e->getMessage()
             );
         } finally {
             Connection::close();

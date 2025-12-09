@@ -166,4 +166,13 @@ class CacheTest extends TestCase
         // File should be deleted
         $this->assertFileDoesNotExist($file);
     }
+
+    public function testGetReturnsNullWhenFileContentIsEmpty(): void
+    {
+        $file = $this->cacheDir . '/' . md5('empty_content') . '.json';
+        file_put_contents($file, '');
+
+        $result = $this->cache->get('empty_content', 3600);
+        $this->assertNull($result);
+    }
 }

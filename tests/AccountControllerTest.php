@@ -203,54 +203,72 @@ class AccountControllerTest extends TestCase
         $this->assertStringContainsString('fromAsset', $response['error']);
     }
 
-    // Tests with keys (will fail due to network but tests the flow)
+    // Tests with mock client to avoid real HTTP calls
     public function testGetAccountInfoWithKeys(): void
     {
-        $response = $this->controller->getAccountInfo([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getAccountInfo([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
-        // Either API error or network error
-        $this->assertArrayHasKey('success', $response);
+        $this->assertTrue($response['success']);
+        $this->assertArrayHasKey('data', $response);
     }
 
     public function testGetOpenOrdersWithKeys(): void
     {
-        $response = $this->controller->getOpenOrders([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getOpenOrders([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetOpenOrdersWithSymbol(): void
     {
-        $response = $this->controller->getOpenOrders([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getOpenOrders([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetOrderHistoryWithKeys(): void
     {
-        $response = $this->controller->getOrderHistory([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getOrderHistory([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetOrderHistoryWithLimit(): void
     {
-        $response = $this->controller->getOrderHistory([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getOrderHistory([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -258,33 +276,66 @@ class AccountControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetAssetBalanceWithKeys(): void
     {
-        $response = $this->controller->getAssetBalance([
+        $mock = new class implements ClientInterface {
+            public function get(string $endpoint, array $params = []): array
+            {
+                return [
+                    'balances' => [
+                        ['asset' => 'BTC', 'free' => '1.5', 'locked' => '0.1'],
+                        ['asset' => 'ETH', 'free' => '10.0', 'locked' => '0.0'],
+                    ]
+                ];
+            }
+
+            public function post(string $endpoint, array $params = []): array
+            {
+                return [];
+            }
+
+            public function delete(string $endpoint, array $params = []): array
+            {
+                return [];
+            }
+        };
+
+        $controller = new AccountController($mock);
+
+        $response = $controller->getAssetBalance([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'asset' => 'BTC'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetMyTradesWithKeys(): void
     {
-        $response = $this->controller->getMyTrades([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getMyTrades([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetMyTradesWithLimit(): void
     {
-        $response = $this->controller->getMyTrades([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getMyTrades([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -292,73 +343,101 @@ class AccountControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetAccountStatusWithKeys(): void
     {
-        $response = $this->controller->getAccountStatus([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getAccountStatus([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetApiTradingStatusWithKeys(): void
     {
-        $response = $this->controller->getApiTradingStatus([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getApiTradingStatus([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testGetCapitalConfigWithKeys(): void
     {
-        $response = $this->controller->getCapitalConfig([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->getCapitalConfig([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testDustTransferWithKeys(): void
     {
-        $response = $this->controller->dustTransfer([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->dustTransfer([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'assets' => ['SHIB', 'DOGE']
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testAssetDividendWithKeys(): void
     {
-        $response = $this->controller->assetDividend([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->assetDividend([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testAssetDividendWithAsset(): void
     {
-        $response = $this->controller->assetDividend([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->assetDividend([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'asset' => 'BTC'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testConvertTransferableWithKeys(): void
     {
-        $response = $this->controller->convertTransferable([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->convertTransferable([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'fromAsset' => 'BTC',
@@ -366,16 +445,21 @@ class AccountControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testP2pOrdersWithKeys(): void
     {
-        $response = $this->controller->p2pOrders([
+        $mock = $this->createMockClient();
+        $controller = new AccountController($mock);
+
+        $response = $controller->p2pOrders([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     // ===== TESTES COM MOCK =====

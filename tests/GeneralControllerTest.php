@@ -39,125 +39,171 @@ class GeneralControllerTest extends TestCase
 
     public function testPingReturnsArray(): void
     {
-        $response = $this->controller->ping();
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->ping();
 
         $this->assertIsArray($response);
-        // Either success or error format
-        $this->assertTrue(
-            isset($response['success']) || isset($response['error']),
-            'Response should have success or error key'
-        );
+        $this->assertTrue($response['success']);
     }
 
     public function testTimeReturnsArray(): void
     {
-        $response = $this->controller->time();
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->time();
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoReturnsArray(): void
     {
-        $response = $this->controller->exchangeInfo([]);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo([]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithSymbol(): void
     {
-        $response = $this->controller->exchangeInfo(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['symbol' => 'BTCUSDT']);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithSymbols(): void
     {
-        $response = $this->controller->exchangeInfo(['symbols' => ['BTCUSDT', 'ETHUSDT']]);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['symbols' => ['BTCUSDT', 'ETHUSDT']]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithPermissions(): void
     {
-        $response = $this->controller->exchangeInfo(['permissions' => 'SPOT']);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['permissions' => 'SPOT']);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithMarket(): void
     {
-        $response = $this->controller->exchangeInfo(['market' => 'spot']);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['market' => 'spot']);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithNoCache(): void
     {
-        $response = $this->controller->exchangeInfo(['noCache' => true]);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['noCache' => true]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithNoCacheString(): void
     {
-        $response = $this->controller->exchangeInfo(['noCache' => 'true']);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['noCache' => 'true']);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithNoCacheInt(): void
     {
-        $response = $this->controller->exchangeInfo(['noCache' => 1]);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['noCache' => 1]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithNoCacheStringOne(): void
     {
-        $response = $this->controller->exchangeInfo(['noCache' => '1']);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['noCache' => '1']);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoWithPermissionsArray(): void
     {
-        $response = $this->controller->exchangeInfo(['permissions' => ['spot', 'margin']]);
+        $mock = $this->createMockClient();
+        $controller = new GeneralController($mock);
+
+        $response = $controller->exchangeInfo(['permissions' => ['spot', 'margin']]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testExchangeInfoErrorHandling(): void
     {
-        // This will fail due to SSL issues, but should return error format
-        $response = $this->controller->exchangeInfo([]);
+        $mock = $this->createExceptionMock('Network error');
+        $controller = new GeneralController($mock);
+
+        // Use noCache to ensure we hit the API mock
+        $response = $controller->exchangeInfo(['noCache' => true]);
 
         $this->assertIsArray($response);
-        // Either success with data or error
-        $this->assertTrue(
-            isset($response['success']) || isset($response['error']),
-            'Response should have success or error key'
-        );
+        $this->assertFalse($response['success']);
+        $this->assertArrayHasKey('error', $response);
     }
 
     public function testPingErrorHandling(): void
     {
-        // Network errors should be caught and return error format
-        $response = $this->controller->ping();
+        $mock = $this->createExceptionMock('Ping failed');
+        $controller = new GeneralController($mock);
+
+        $response = $controller->ping();
 
         $this->assertIsArray($response);
-        if (isset($response['success']) && $response['success'] === false) {
-            $this->assertArrayHasKey('error', $response);
-        }
+        $this->assertFalse($response['success']);
+        $this->assertArrayHasKey('error', $response);
     }
 
     public function testTimeErrorHandling(): void
     {
-        $response = $this->controller->time();
+        $mock = $this->createExceptionMock('Time error');
+        $controller = new GeneralController($mock);
+
+        $response = $controller->time();
 
         $this->assertIsArray($response);
-        if (isset($response['success']) && $response['success'] === false) {
-            $this->assertArrayHasKey('error', $response);
-        }
+        $this->assertFalse($response['success']);
+        $this->assertArrayHasKey('error', $response);
     }
 
     // ===== TESTES COM MOCK =====

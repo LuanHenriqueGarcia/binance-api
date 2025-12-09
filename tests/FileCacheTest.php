@@ -248,4 +248,16 @@ class FileCacheTest extends TestCase
         $result = $this->cache->get('unreadable', 3600);
         $this->assertNull($result);
     }
+
+    public function testGetReturnsNullForEmptyFile(): void
+    {
+        $file = $this->cacheDir . '/' . md5('empty_file') . '.json';
+        if (!is_dir($this->cacheDir)) {
+            @mkdir($this->cacheDir, 0777, true);
+        }
+        file_put_contents($file, '');
+
+        $result = $this->cache->get('empty_file', 3600);
+        $this->assertNull($result);
+    }
 }

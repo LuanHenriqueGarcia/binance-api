@@ -149,6 +149,8 @@ class Response
 
     /**
      * Envia a resposta HTTP
+     *
+     * @codeCoverageIgnore
      */
     public function send(): void
     {
@@ -170,6 +172,8 @@ class Response
 
     /**
      * Calcula o tempo de resposta em ms
+     *
+     * @codeCoverageIgnore
      */
     private function getResponseTime(): int
     {

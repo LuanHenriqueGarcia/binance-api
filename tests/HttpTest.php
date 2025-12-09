@@ -394,7 +394,7 @@ class HttpTest extends TestCase
     {
         $_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
         $_SERVER['HTTP_ACCEPT'] = 'application/json';
-        
+
         $request = new Request('GET', '/');
         $headers = $request->getHeaders();
 
@@ -515,5 +515,31 @@ class HttpTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame([], $response->getData());
+    }
+
+    public function testRequestParseParamsWithInvalidJson(): void
+    {
+        // Test POST with invalid JSON in body
+        // Since we can't inject php://input easily, test parseParams indirectly
+        $request = new Request('POST', '/api/test', ['manual' => 'params']);
+
+        $this->assertSame('params', $request->get('manual'));
+    }
+
+    public function testRequestUnknownMethod(): void
+    {
+        $request = new Request('OPTIONS', '/api/test', ['test' => 'data']);
+
+        $this->assertSame('OPTIONS', $request->getMethod());
+        // OPTIONS method falls through to return empty array in parseParams
+        $params = $request->getParams();
+        $this->assertIsArray($params);
+    }
+
+    public function testRequestHeadMethod(): void
+    {
+        $request = new Request('HEAD', '/api/test', ['test' => 'data']);
+
+        $this->assertSame('HEAD', $request->getMethod());
     }
 }

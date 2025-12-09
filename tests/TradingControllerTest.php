@@ -322,10 +322,13 @@ class TradingControllerTest extends TestCase
         $this->assertSame(['code' => -1013, 'msg' => 'Invalid quantity'], $result['data']);
     }
 
-    // Test with valid params (will fail due to network but tests the flow)
+    // Test with valid params using mock client
     public function testCreateOrderWithValidParams(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -338,11 +341,15 @@ class TradingControllerTest extends TestCase
 
         $this->assertIsArray($response);
         $this->assertArrayHasKey('success', $response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateMarketOrderWithQuantity(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -352,11 +359,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateMarketOrderWithQuoteOrderQty(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -366,11 +377,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateStopLossOrder(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -381,11 +396,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateStopLossLimitOrder(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -398,11 +417,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateTakeProfitOrder(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -413,11 +436,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateTakeProfitLimitOrder(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -430,11 +457,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateLimitMakerOrder(): void
     {
-        $response = $this->controller->createOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -445,11 +476,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelOrderWithKeys(): void
     {
-        $response = $this->controller->cancelOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -457,11 +492,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testTestOrderWithKeys(): void
     {
-        $response = $this->controller->testOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->testOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -473,11 +512,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testQueryOrderWithOrderId(): void
     {
-        $response = $this->controller->queryOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->queryOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -485,11 +528,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testQueryOrderWithOrigClientOrderId(): void
     {
-        $response = $this->controller->queryOrder([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->queryOrder([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -497,22 +544,30 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelOpenOrdersWithKeys(): void
     {
-        $response = $this->controller->cancelOpenOrders([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOpenOrders([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateOcoWithKeys(): void
     {
-        $response = $this->controller->createOco([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOco([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -523,11 +578,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCreateOcoWithAllParams(): void
     {
-        $response = $this->controller->createOco([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->createOco([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -540,21 +599,29 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testListOcoWithKeys(): void
     {
-        $response = $this->controller->listOco([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->listOco([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelOcoWithOrderListId(): void
     {
-        $response = $this->controller->cancelOco([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOco([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -562,11 +629,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelOcoWithListClientOrderId(): void
     {
-        $response = $this->controller->cancelOco([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelOco([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -574,32 +645,44 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testOrderRateLimitWithKeys(): void
     {
-        $response = $this->controller->orderRateLimit([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->orderRateLimit([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCommissionRateWithKeys(): void
     {
-        $response = $this->controller->commissionRate([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->commissionRate([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT'
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelReplaceWithKeys(): void
     {
-        $response = $this->controller->cancelReplace([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelReplace([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -613,11 +696,15 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     public function testCancelReplaceWithOrigClientOrderId(): void
     {
-        $response = $this->controller->cancelReplace([
+        $mock = $this->createMockClient();
+        $controller = new TradingController($mock);
+
+        $response = $controller->cancelReplace([
             'api_key' => 'test_key',
             'secret_key' => 'test_secret',
             'symbol' => 'BTCUSDT',
@@ -631,6 +718,7 @@ class TradingControllerTest extends TestCase
         ]);
 
         $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
     }
 
     // ===== TESTES COM MOCK =====

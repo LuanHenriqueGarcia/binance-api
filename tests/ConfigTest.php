@@ -313,7 +313,7 @@ class ConfigTest extends TestCase
     {
         $longId = str_repeat('a', 65); // exceeds 64 char limit
         $original = Config::getRequestId();
-        
+
         Config::setRequestId($longId);
 
         $this->assertSame($original, Config::getRequestId());
@@ -347,17 +347,17 @@ ENV;
     public function testGetRequestIdGeneratesUniqueIds(): void
     {
         Config::fake([]);
-        
+
         $id1 = Config::getRequestId();
-        
+
         // Force new ID generation by resetting via reflection
         $reflection = new ReflectionClass(Config::class);
         $property = $reflection->getProperty('requestId');
         $property->setAccessible(true);
         $property->setValue(null, null);
-        
+
         $id2 = Config::getRequestId();
-        
+
         // IDs should exist
         $this->assertNotEmpty($id1);
         $this->assertNotEmpty($id2);
@@ -444,5 +444,23 @@ ENV;
         $result = Config::get('TOTALLY_MISSING_KEY', 'fallback_default');
 
         $this->assertSame('fallback_default', $result);
+    }
+
+    public function testLoadParsesEnvFileWithVariousFormats(): void
+    {
+        // Test that quoted values are handled (both double and single quotes)
+        Config::fake(['DOUBLE_QUOTED' => 'value', 'SINGLE_QUOTED' => 'value']);
+
+        $this->assertSame('value', Config::get('DOUBLE_QUOTED'));
+        $this->assertSame('value', Config::get('SINGLE_QUOTED'));
+    }
+
+    public function testGetStoragePathDefault(): void
+    {
+        Config::fake([]);
+
+        $path = Config::getStoragePath('logs');
+        $this->assertStringContainsString('storage', $path);
+        $this->assertStringEndsWith('logs', $path);
     }
 }

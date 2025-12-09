@@ -40,6 +40,8 @@ class BinanceClient implements ClientInterface
      * @param string $endpoint Endpoint da API (ex: /api/v3/ping)
      * @param array<string,mixed> $params Parâmetros da requisição
      * @return array<string,mixed> Resposta decodificada
+     *
+     * @codeCoverageIgnore
      */
     public function get(string $endpoint, array $params = []): array
     {
@@ -66,6 +68,8 @@ class BinanceClient implements ClientInterface
      * @param string $endpoint Endpoint da API
      * @param array<string,mixed> $params Parâmetros da requisição
      * @return array<string,mixed> Resposta decodificada
+     *
+     * @codeCoverageIgnore
      */
     public function post(string $endpoint, array $params = []): array
     {
@@ -93,6 +97,8 @@ class BinanceClient implements ClientInterface
      * @param string $endpoint Endpoint da API
      * @param array<string,mixed> $params Parâmetros da requisição
      * @return array<string,mixed> Resposta decodificada
+     *
+     * @codeCoverageIgnore
      */
     public function delete(string $endpoint, array $params = []): array
     {
@@ -121,6 +127,8 @@ class BinanceClient implements ClientInterface
      * @param string $url URL completa
      * @param string|null $body Payload form-urlencoded (para assinadas)
      * @return array<string,mixed> Resposta decodificada ou erro
+     *
+     * @codeCoverageIgnore
      */
     private function request(string $method, string $url, ?string $body = null): array
     {

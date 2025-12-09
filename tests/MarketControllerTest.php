@@ -116,106 +116,157 @@ class MarketControllerTest extends TestCase
 
     public function testTickerPriceNoParams(): void
     {
-        // tickerPrice can be called without symbol (returns all)
-        // Just verify it returns an array structure
-        $response = $this->controller->tickerPrice([]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        // Should either succeed or fail gracefully without API
-        $this->assertIsArray($response);
+        // tickerPrice can be called without symbol (returns all)
+        $response = $controller->tickerPrice([]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testTicker24hNoParams(): void
     {
-        // ticker24h can be called without symbol (returns all)
-        $response = $this->controller->ticker24h([]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        // ticker24h can be called without symbol (returns all)
+        $response = $controller->ticker24h([]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testBookTickerNoParams(): void
     {
-        // bookTicker can be called without symbol
-        $response = $this->controller->bookTicker([]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        // bookTicker can be called without symbol
+        $response = $controller->bookTicker([]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     // Test methods that make API calls with valid params
     public function testTickerWithSymbol(): void
     {
-        $response = $this->controller->ticker(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
-        // Either success or error due to network
-        $this->assertTrue(isset($response['success']) || isset($response['error']));
+        $response = $controller->ticker(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testOrderBookWithSymbol(): void
     {
-        $response = $this->controller->orderBook(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->orderBook(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testOrderBookWithLimit(): void
     {
-        $response = $this->controller->orderBook(['symbol' => 'BTCUSDT', 'limit' => 10]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->orderBook(['symbol' => 'BTCUSDT', 'limit' => 10]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testTradesWithSymbol(): void
     {
-        $response = $this->controller->trades(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->trades(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testTradesWithLimit(): void
     {
-        $response = $this->controller->trades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->trades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testAvgPriceWithSymbol(): void
     {
-        $response = $this->controller->avgPrice(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->avgPrice(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testBookTickerWithSymbol(): void
     {
-        $response = $this->controller->bookTicker(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->bookTicker(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testAggTradesWithSymbol(): void
     {
-        $response = $this->controller->aggTrades(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->aggTrades(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testAggTradesWithLimit(): void
     {
-        $response = $this->controller->aggTrades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->aggTrades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testKlinesWithValidParams(): void
     {
-        $response = $this->controller->klines(['symbol' => 'BTCUSDT', 'interval' => '1h']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->klines(['symbol' => 'BTCUSDT', 'interval' => '1h']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testKlinesWithAllParams(): void
     {
-        $response = $this->controller->klines([
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
+
+        $response = $controller->klines([
             'symbol' => 'BTCUSDT',
             'interval' => '1h',
             'startTime' => time() * 1000 - 86400000,
@@ -223,59 +274,88 @@ class MarketControllerTest extends TestCase
             'limit' => 10
         ]);
 
-        $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testUiKlinesWithValidParams(): void
     {
-        $response = $this->controller->uiKlines(['symbol' => 'BTCUSDT', 'interval' => '1h']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->uiKlines(['symbol' => 'BTCUSDT', 'interval' => '1h']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testHistoricalTradesWithSymbol(): void
     {
-        $response = $this->controller->historicalTrades(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->historicalTrades(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testHistoricalTradesWithLimit(): void
     {
-        $response = $this->controller->historicalTrades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->historicalTrades(['symbol' => 'BTCUSDT', 'limit' => 10]);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testRollingWindowTickerWithSymbol(): void
     {
-        $response = $this->controller->rollingWindowTicker(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->rollingWindowTicker(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testRollingWindowTickerWithWindowSize(): void
     {
-        $response = $this->controller->rollingWindowTicker([
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
+
+        $response = $controller->rollingWindowTicker([
             'symbol' => 'BTCUSDT',
             'windowSize' => '1d'
         ]);
 
-        $this->assertIsArray($response);
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testTickerPriceWithSymbol(): void
     {
-        $response = $this->controller->tickerPrice(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->tickerPrice(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testTicker24hWithSymbol(): void
     {
-        $response = $this->controller->ticker24h(['symbol' => 'BTCUSDT']);
+        $mock = $this->createMockClient();
+        $controller = new MarketController($mock);
 
-        $this->assertIsArray($response);
+        $response = $controller->ticker24h(['symbol' => 'BTCUSDT']);
+
+        $this->assertTrue($response['success']);
+        $this->assertIsArray($response['data']);
     }
 
     public function testFormatResponseBinanceError(): void

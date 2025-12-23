@@ -92,6 +92,60 @@ class Config
         return self::get('BINANCE_SECRET_KEY');
     }
 
+    /**
+     * Obter chave de API da Coinbase
+     */
+    public static function getCoinbaseApiKey(): ?string
+    {
+        return self::get('COINBASE_API_KEY');
+    }
+
+    /**
+     * Obter chave secreta da Coinbase (private key PEM)
+     */
+    public static function getCoinbaseApiSecret(): ?string
+    {
+        return self::get('COINBASE_API_SECRET');
+    }
+
+    /**
+     * Obter caminho para JSON de credenciais Coinbase
+     */
+    public static function getCoinbaseKeyFile(): ?string
+    {
+        return self::get('COINBASE_KEY_FILE');
+    }
+
+    /**
+     * Obter base URL da Coinbase
+     */
+    public static function getCoinbaseBaseUrl(): string
+    {
+        $envUrl = self::get('COINBASE_BASE_URL');
+
+        if ($envUrl) {
+            return rtrim($envUrl, '/');
+        }
+
+        return 'https://api.coinbase.com';
+    }
+
+    /**
+     * Obter caminho para bundle de CA customizado (Coinbase)
+     */
+    public static function getCoinbaseCaBundle(): ?string
+    {
+        return self::get('COINBASE_CA_BUNDLE');
+    }
+
+    /**
+     * Verificar se deve validar SSL (Coinbase)
+     */
+    public static function shouldVerifyCoinbaseSsl(): bool
+    {
+        return self::get('COINBASE_SSL_VERIFY', 'true') === 'true';
+    }
+
     public static function getRecvWindow(): int
     {
         return (int) self::get('BINANCE_RECV_WINDOW', 5000);

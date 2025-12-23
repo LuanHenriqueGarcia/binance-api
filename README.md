@@ -26,6 +26,7 @@
 - 📊 **Market Data** - Preços, Order Book, Trades, Klines
 - 💼 **Conta** - Saldos, Histórico de Ordens, Status
 - 💹 **Trading** - Criar/Cancelar Ordens, OCO, Test Orders
+- 🪙 **Coinbase Advanced Trade** - Market data público + ordens autenticadas via JWT (ES256)
 - ⚡ **Cache inteligente** para Exchange Info
 - 🛡️ **Rate Limiting** configurável por IP/endpoint
 - 📝 **Logging** estruturado em JSON com mascaramento de dados sensíveis
@@ -151,14 +152,27 @@ Crie um arquivo `.env` na raiz do projeto:
 BINANCE_API_KEY=your_api_key
 BINANCE_SECRET_KEY=your_secret_key
 
+# Coinbase Advanced Trade API Keys
+COINBASE_API_KEY=your_coinbase_api_key
+COINBASE_API_SECRET=your_coinbase_private_key
+# Ou use arquivo JSON com { "name": "...", "privateKey": "..." }
+# COINBASE_KEY_FILE=/path/to/coinbase-key.json
+
 # Base URL (opcional - padrão: https://api.binance.com)
 BINANCE_BASE_URL=https://api.binance.com
 # Ou use testnet:
 BINANCE_TESTNET=true
 
+# Base URL Coinbase (opcional - padrão: https://api.coinbase.com)
+COINBASE_BASE_URL=https://api.coinbase.com
+
 # SSL (produção: sempre true)
 BINANCE_SSL_VERIFY=true
 BINANCE_CA_BUNDLE=/path/to/ca-bundle.crt
+
+# SSL Coinbase (produção: sempre true)
+COINBASE_SSL_VERIFY=true
+COINBASE_CA_BUNDLE=/path/to/ca-bundle.crt
 
 # Timing
 BINANCE_RECV_WINDOW=5000
@@ -247,6 +261,43 @@ METRICS_ENABLED=true
 |--------|----------|-----------|
 | `GET` | `/health` | Health check |
 | `GET` | `/metrics` | Métricas (se habilitado) |
+
+---
+
+## 🪙 Coinbase (Advanced Trade)
+
+### 🌐 General (Públicos)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/coinbase/general/ping` | Testa conectividade |
+| `GET` | `/api/coinbase/general/time` | Hora do servidor Coinbase |
+
+### 📊 Market Data (Públicos)
+
+| Método | Endpoint | Parâmetros | Descrição |
+|--------|----------|------------|-----------|
+| `GET` | `/api/coinbase/market/products` | `limit?`, `product_ids?` | Lista produtos |
+| `GET` | `/api/coinbase/market/product` | `product_id` | Detalhe de produto |
+| `GET` | `/api/coinbase/market/product-book` | `product_id`, `limit?` | Livro de ofertas |
+| `GET` | `/api/coinbase/market/ticker` | `product_id`, `limit?` | Ticker do produto |
+| `GET` | `/api/coinbase/market/candles` | `product_id`, `start`, `end`, `granularity`, `limit?` | Candles |
+
+### 💼 Account (Autenticados)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/coinbase/account/accounts` | Lista contas |
+| `GET` | `/api/coinbase/account/account` | Detalhe por `account_uuid` |
+
+### 💹 Trading (Autenticados)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/api/coinbase/trading/create-order` | Criar ordem |
+| `POST` | `/api/coinbase/trading/cancel-order` | Cancelar ordem |
+| `GET` | `/api/coinbase/trading/get-order` | Consultar ordem |
+| `GET` | `/api/coinbase/trading/list-orders` | Listar ordens |
 
 ---
 

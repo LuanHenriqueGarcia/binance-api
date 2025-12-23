@@ -510,6 +510,198 @@
       ]
     },
 
+    { "_id": "fld_coinbase_general", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Coinbase - General" },
+    {
+      "_id": "req_coinbase_ping",
+      "_type": "request",
+      "parentId": "fld_coinbase_general",
+      "name": "Ping",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/general/ping"
+    },
+    {
+      "_id": "req_coinbase_time",
+      "_type": "request",
+      "parentId": "fld_coinbase_general",
+      "name": "Server Time",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/general/time"
+    },
+
+    { "_id": "fld_coinbase_market", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Coinbase - Market" },
+    {
+      "_id": "req_coinbase_products",
+      "_type": "request",
+      "parentId": "fld_coinbase_market",
+      "name": "Products",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/market/products",
+      "parameters": [
+        { "name": "limit", "value": "50" },
+        { "name": "product_ids", "value": "BTC-USD", "disabled": true },
+        { "name": "product_type", "value": "SPOT", "disabled": true },
+        { "name": "offset", "value": "0", "disabled": true },
+        { "name": "contract_expiry_type", "value": "", "disabled": true },
+        { "name": "expiring_contract_status", "value": "", "disabled": true },
+        { "name": "get_all_products", "value": "false", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_coinbase_product",
+      "_type": "request",
+      "parentId": "fld_coinbase_market",
+      "name": "Product",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/market/product",
+      "parameters": [
+        { "name": "product_id", "value": "BTC-USD" }
+      ]
+    },
+    {
+      "_id": "req_coinbase_product_book",
+      "_type": "request",
+      "parentId": "fld_coinbase_market",
+      "name": "Product Book",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/market/product-book",
+      "parameters": [
+        { "name": "product_id", "value": "BTC-USD" },
+        { "name": "limit", "value": "25" },
+        { "name": "aggregation_price_increment", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_coinbase_ticker",
+      "_type": "request",
+      "parentId": "fld_coinbase_market",
+      "name": "Ticker",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/market/ticker",
+      "parameters": [
+        { "name": "product_id", "value": "BTC-USD" },
+        { "name": "limit", "value": "1", "disabled": true },
+        { "name": "start", "value": "", "disabled": true },
+        { "name": "end", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_coinbase_candles",
+      "_type": "request",
+      "parentId": "fld_coinbase_market",
+      "name": "Candles",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/market/candles",
+      "parameters": [
+        { "name": "product_id", "value": "BTC-USD" },
+        { "name": "start", "value": "2024-01-01T00:00:00Z" },
+        { "name": "end", "value": "2024-01-01T01:00:00Z" },
+        { "name": "granularity", "value": "ONE_MINUTE" },
+        { "name": "limit", "value": "100", "disabled": true }
+      ]
+    },
+
+    { "_id": "fld_coinbase_account", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Coinbase - Account (auth)" },
+    {
+      "_id": "req_coinbase_accounts",
+      "_type": "request",
+      "parentId": "fld_coinbase_account",
+      "name": "Accounts",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/account/accounts",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.coinbase_api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.coinbase_secret_key }}", "disabled": false },
+        { "name": "key_file", "value": "{{ _.coinbase_key_file }}", "disabled": true },
+        { "name": "limit", "value": "50", "disabled": true },
+        { "name": "cursor", "value": "", "disabled": true },
+        { "name": "retail_portfolio_id", "value": "", "disabled": true }
+      ]
+    },
+    {
+      "_id": "req_coinbase_account",
+      "_type": "request",
+      "parentId": "fld_coinbase_account",
+      "name": "Account (by UUID)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/account/account",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.coinbase_api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.coinbase_secret_key }}", "disabled": false },
+        { "name": "key_file", "value": "{{ _.coinbase_key_file }}", "disabled": true },
+        { "name": "account_uuid", "value": "ACCOUNT_UUID_HERE" }
+      ]
+    },
+
+    { "_id": "fld_coinbase_trading", "_type": "request_group", "parentId": "wrk_binance_api", "name": "Coinbase - Trading (auth)" },
+    {
+      "_id": "req_coinbase_create_order",
+      "_type": "request",
+      "parentId": "fld_coinbase_trading",
+      "name": "Create Order (LIMIT)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/coinbase/trading/create-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.coinbase_api_key }}\",\n  \"secret_key\": \"{{ _.coinbase_secret_key }}\",\n  \"product_id\": \"BTC-USD\",\n  \"side\": \"BUY\",\n  \"type\": \"LIMIT\",\n  \"base_size\": \"0.001\",\n  \"limit_price\": \"35000\",\n  \"time_in_force\": \"GTC\",\n  \"post_only\": false\n}"
+      }
+    },
+    {
+      "_id": "req_coinbase_create_order_market",
+      "_type": "request",
+      "parentId": "fld_coinbase_trading",
+      "name": "Create Order (MARKET quote_size)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/coinbase/trading/create-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.coinbase_api_key }}\",\n  \"secret_key\": \"{{ _.coinbase_secret_key }}\",\n  \"product_id\": \"BTC-USD\",\n  \"side\": \"BUY\",\n  \"type\": \"MARKET\",\n  \"quote_size\": \"50\"\n}"
+      }
+    },
+    {
+      "_id": "req_coinbase_cancel_order",
+      "_type": "request",
+      "parentId": "fld_coinbase_trading",
+      "name": "Cancel Order",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/coinbase/trading/cancel-order",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"api_key\": \"{{ _.coinbase_api_key }}\",\n  \"secret_key\": \"{{ _.coinbase_secret_key }}\",\n  \"order_id\": \"ORDER_ID_HERE\"\n}"
+      }
+    },
+    {
+      "_id": "req_coinbase_get_order",
+      "_type": "request",
+      "parentId": "fld_coinbase_trading",
+      "name": "Get Order",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/trading/get-order",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.coinbase_api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.coinbase_secret_key }}", "disabled": false },
+        { "name": "order_id", "value": "ORDER_ID_HERE" }
+      ]
+    },
+    {
+      "_id": "req_coinbase_list_orders",
+      "_type": "request",
+      "parentId": "fld_coinbase_trading",
+      "name": "List Orders",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/coinbase/trading/list-orders",
+      "parameters": [
+        { "name": "api_key", "value": "{{ _.coinbase_api_key }}", "disabled": false },
+        { "name": "secret_key", "value": "{{ _.coinbase_secret_key }}", "disabled": false },
+        { "name": "order_ids", "value": "", "disabled": true },
+        { "name": "product_ids", "value": "BTC-USD", "disabled": true },
+        { "name": "order_status", "value": "OPEN", "disabled": true },
+        { "name": "limit", "value": "50", "disabled": true },
+        { "name": "start_date", "value": "", "disabled": true },
+        { "name": "end_date", "value": "", "disabled": true },
+        { "name": "cursor", "value": "", "disabled": true }
+      ]
+    },
+
     {
       "_id": "env_secrets",
       "_type": "environment",
@@ -517,7 +709,10 @@
       "name": "Local Secrets",
       "data": {
         "api_key": "",
-        "secret_key": ""
+        "secret_key": "",
+        "coinbase_api_key": "",
+        "coinbase_secret_key": "",
+        "coinbase_key_file": ""
       }
     }
   ]

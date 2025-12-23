@@ -6,6 +6,10 @@ use BinanceAPI\Controllers\GeneralController;
 use BinanceAPI\Controllers\MarketController;
 use BinanceAPI\Controllers\AccountController;
 use BinanceAPI\Controllers\TradingController;
+use BinanceAPI\Controllers\CoinbaseGeneralController;
+use BinanceAPI\Controllers\CoinbaseMarketController;
+use BinanceAPI\Controllers\CoinbaseAccountController;
+use BinanceAPI\Controllers\CoinbaseTradingController;
 use BinanceAPI\Config;
 use BinanceAPI\RateLimiter;
 use BinanceAPI\Metrics;
@@ -81,6 +85,7 @@ class Router
 
         $endpoint = $pathParts[0] ?? null;
         $action = $pathParts[1] ?? null;
+        $subAction = $pathParts[2] ?? null;
 
         if ($endpoint === 'health') {
             $this->handleHealth();
@@ -92,7 +97,12 @@ class Router
             return;
         }
 
-        if ($this->isRateLimited($endpoint)) {
+        if ($this->isRateLimited($endpoint, $action)) {
+            return;
+        }
+
+        if ($endpoint === 'coinbase') {
+            $this->handleCoinbase($action, $subAction);
             return;
         }
 
@@ -102,6 +112,23 @@ class Router
             'account' => $this->handleAccount($action),
             'trading' => $this->handleTrading($action),
             default => $this->sendError('Endpoint não encontrado', 404)
+        };
+    }
+
+    /**
+     * Manipular endpoints Coinbase
+     *
+     * @param string|null $section Seção (general/market/account/trading)
+     * @param string|null $action Ação a executar
+     */
+    private function handleCoinbase(?string $section, ?string $action): void
+    {
+        match ($section) {
+            'general' => $this->handleCoinbaseGeneral($action),
+            'market' => $this->handleCoinbaseMarket($action),
+            'account' => $this->handleCoinbaseAccount($action),
+            'trading' => $this->handleCoinbaseTrading($action),
+            default => $this->sendError('Ação não encontrada', 404)
         };
     }
 
@@ -200,6 +227,75 @@ class Router
     }
 
     /**
+     * Manipular endpoints gerais Coinbase
+     *
+     * @param string|null $action
+     */
+    private function handleCoinbaseGeneral(?string $action): void
+    {
+        $controller = new CoinbaseGeneralController();
+
+        match ($action) {
+            'ping' => $this->sendResponse($controller->ping()),
+            'time' => $this->sendResponse($controller->time()),
+            default => $this->sendError('Ação não encontrada', 404)
+        };
+    }
+
+    /**
+     * Manipular endpoints de market data Coinbase
+     *
+     * @param string|null $action
+     */
+    private function handleCoinbaseMarket(?string $action): void
+    {
+        $controller = new CoinbaseMarketController();
+
+        match ($action) {
+            'products' => $this->sendResponse($controller->products($this->params)),
+            'product' => $this->sendResponse($controller->product($this->params)),
+            'product-book' => $this->sendResponse($controller->productBook($this->params)),
+            'ticker' => $this->sendResponse($controller->ticker($this->params)),
+            'candles' => $this->sendResponse($controller->candles($this->params)),
+            default => $this->sendError('Ação não encontrada', 404)
+        };
+    }
+
+    /**
+     * Manipular endpoints de conta Coinbase
+     *
+     * @param string|null $action
+     */
+    private function handleCoinbaseAccount(?string $action): void
+    {
+        $controller = new CoinbaseAccountController();
+
+        match ($action) {
+            'accounts' => $this->sendResponse($controller->accounts($this->params)),
+            'account' => $this->sendResponse($controller->account($this->params)),
+            default => $this->sendError('Ação não encontrada', 404)
+        };
+    }
+
+    /**
+     * Manipular endpoints de trading Coinbase
+     *
+     * @param string|null $action
+     */
+    private function handleCoinbaseTrading(?string $action): void
+    {
+        $controller = new CoinbaseTradingController();
+
+        match ($action) {
+            'create-order' => $this->sendResponse($controller->createOrder($this->params)),
+            'cancel-order' => $this->sendResponse($controller->cancelOrder($this->params)),
+            'get-order' => $this->sendResponse($controller->getOrder($this->params)),
+            'list-orders' => $this->sendResponse($controller->listOrders($this->params)),
+            default => $this->sendError('Ação não encontrada', 404)
+        };
+    }
+
+    /**
      * Enviar resposta de sucesso
      *
      * @param array<string,mixed> $data Dados a enviar
@@ -254,19 +350,24 @@ class Router
         return false;
     }
 
-    private function isRateLimited(?string $endpoint): bool
+    private function isRateLimited(?string $endpoint, ?string $action = null): bool
     {
         $enabled = (bool)Config::get('RATE_LIMIT_ENABLED', false);
         if (!$enabled) {
             return false;
         }
 
-        if (!in_array($endpoint, ['account', 'trading'], true)) {
+        if (!in_array($endpoint, ['account', 'trading', 'coinbase'], true)) {
+            return false;
+        }
+
+        if ($endpoint === 'coinbase' && !in_array($action, ['account', 'trading'], true)) {
             return false;
         }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
-        $routeKey = $endpoint . ':' . ($this->method ?? 'GET') . ':' . $ip;
+        $prefix = $endpoint === 'coinbase' ? 'coinbase:' . ($action ?? 'unknown') : $endpoint;
+        $routeKey = $prefix . ':' . ($this->method ?? 'GET') . ':' . $ip;
         $hit = $this->rateLimiter->hit($routeKey);
 
         if (!$hit['allowed']) {
@@ -307,6 +408,16 @@ class Router
     {
         if (isset($params['symbol']) && is_string($params['symbol'])) {
             $params['symbol'] = strtoupper($params['symbol']);
+        }
+        if (isset($params['product_id']) && is_string($params['product_id'])) {
+            $params['product_id'] = strtoupper($params['product_id']);
+        }
+        if (isset($params['product_ids']) && is_array($params['product_ids'])) {
+            $params['product_ids'] = array_map(function ($value) {
+                return is_string($value) ? strtoupper($value) : $value;
+            }, $params['product_ids']);
+        } elseif (isset($params['product_ids']) && is_string($params['product_ids'])) {
+            $params['product_ids'] = strtoupper($params['product_ids']);
         }
         return $params;
     }

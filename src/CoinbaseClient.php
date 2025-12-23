@@ -233,6 +233,9 @@ class CoinbaseClient implements ClientInterface
         });
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     private function buildUrl(string $endpoint, array $params): string
     {
         $url = $this->baseUrl . $endpoint;

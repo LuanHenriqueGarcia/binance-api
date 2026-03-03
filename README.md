@@ -1,223 +1,131 @@
-﻿# Binance API Monorepo
+# Binance API Monorepo
 
-Projeto com backend PHP para integracao com Binance e Coinbase.
+Monorepo com:
+- `api/`: API REST em PHP para Binance e Coinbase.
+- `web/`: frontend Next.js (dashboard de operacao e diagnostico).
 
-## Estrutura
+## Portas padrao
 
-- `api/`: API REST em PHP (principal).
-- `web/`: pasta reservada para frontend (atualmente vazia).
-
-## Status atual
-
-- API com rotas para Binance e Coinbase.
-- Testes unitarios extensos no backend.
-- Sem README original no repo (este arquivo e inicial).
-- Frontend ainda nao implementado neste repositorio.
-
-## Stack (API)
-
-- PHP >= 8.1
-- Composer
-- cURL/JSON/OpenSSL
-- PHPUnit (dev)
-- PHPStan (dev)
-
-Arquivos principais:
-
-- `api/index.php`
-- `api/src/Router.php`
-- `api/src/Controllers/*`
-- `api/src/BinanceClient.php`
-- `api/src/CoinbaseClient.php`
+- Frontend: `http://localhost:3000`
+- API: `http://localhost:8080/api`
+- PostgreSQL (docker): `localhost:5432`
 
 ## Requisitos
 
-Instale no ambiente local:
+### Para API (local sem Docker)
+- PHP 8.2+
+- Composer
+- Extensoes PHP: `curl`, `openssl`, `json`, `bcmath`, `pdo`, `pdo_sqlite`, `pdo_pgsql`
 
-1. PHP 8.1+
-2. Composer
-3. Extensoes PHP:
-- `curl`
-- `openssl`
-- `json`
-- `pdo` e `pdo_pgsql` (se usar camada de banco)
+### Para Frontend
+- Node 20+
+- pnpm
 
-## Setup rapido (local)
+## Setup rapido
+
+### 1) API com Docker (recomendado)
+
+```bash
+cd api
+docker-compose up --build -d
+```
+
+A API sobe em `http://localhost:8080/api`.
+
+### 2) Frontend
+
+```bash
+cd web
+cp .env.local.example .env.local
+pnpm install
+pnpm dev
+```
+
+Frontend em `http://localhost:3000`.
+
+## Variaveis de ambiente
+
+### Frontend (`web/.env.local`)
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
+```
+
+### API (`api/.env`)
+
+Pode usar `api/.env.example` como base.
+
+Principais chaves:
+- `APP_ENV`, `APP_DEBUG`
+- `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` (opcional)
+- `BINANCE_API_KEY`, `BINANCE_SECRET_KEY` (endpoints privados Binance)
+- `COINBASE_API_KEY`, `COINBASE_API_SECRET`, `COINBASE_KEY_FILE` (endpoints privados Coinbase)
+- `CORS_ALLOWED_ORIGINS` (padrao: `http://localhost:3000`)
+- `CORS_ALLOWED_METHODS`
+- `CORS_ALLOWED_HEADERS`
+- `METRICS_ENABLED`
+- `RATE_LIMIT_ENABLED`, `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`
+
+## CORS e autenticacao
+
+- A API responde preflight `OPTIONS` com `204`.
+- Headers CORS enviados:
+  - `Access-Control-Allow-Origin`
+  - `Access-Control-Allow-Methods`
+  - `Access-Control-Allow-Headers`
+- O frontend usa `Authorization: Basic ...` quando usuario/senha forem preenchidos.
+- O frontend **nao** envia cookies (`credentials: 'include'` removido).
+
+## Banco de dados: decisao do projeto
+
+- Execucao padrao: PostgreSQL no `docker-compose` da API.
+- Testes locais: SQLite em memoria (mais rapido e sem dependencia externa).
+
+## Validacoes de qualidade
+
+### Backend
 
 ```bash
 cd api
 composer install
-cp .env.example .env
-php -S localhost:8000 -t .
-```
-
-Base URL local:
-
-- `http://localhost:8000/api`
-
-## Setup com Docker (API)
-
-```bash
-cd api
-docker compose up --build -d
-```
-
-Base URL Docker:
-
-- `http://localhost:8080/api`
-
-Observacao importante:
-
-- O `api/docker-compose.yml` referencia um servico `front` com `build: ./binance-front`, mas essa pasta nao existe no estado atual do clone.
-- Para subir apenas a API, remova/comente o servico `front` ou ajuste o path para um frontend valido.
-
-## Rotas disponiveis
-
-Todas as rotas abaixo usam prefixo `/api`.
-
-### Infra
-
-- `GET /health`
-- `GET /metrics` (quando `METRICS_ENABLED=true`)
-
-### Binance - General
-
-- `GET /general/ping`
-- `GET /general/time`
-- `GET /general/exchange-info`
-
-### Binance - Market
-
-- `GET /market/ticker`
-- `GET /market/order-book`
-- `GET /market/trades`
-- `GET /market/avg-price`
-- `GET /market/book-ticker`
-- `GET /market/agg-trades`
-- `GET /market/klines`
-- `GET /market/ui-klines`
-- `GET /market/historical-trades`
-- `GET /market/rolling-window-ticker`
-- `GET /market/ticker-price`
-- `GET /market/ticker-24h`
-
-### Binance - Account (privadas)
-
-- `GET /account/info`
-- `GET /account/open-orders`
-- `GET /account/order-history`
-- `GET /account/balance`
-- `GET /account/my-trades`
-- `GET /account/account-status`
-- `GET /account/api-trading-status`
-- `GET /account/capital-config`
-- `POST /account/dust-transfer`
-- `GET /account/asset-dividend`
-- `GET /account/convert-transferable`
-- `GET /account/p2p-orders`
-
-### Binance - Trading (privadas)
-
-- `POST /trading/create-order`
-- `DELETE /trading/cancel-order`
-- `POST /trading/test-order`
-- `GET /trading/query-order`
-- `DELETE /trading/cancel-open-orders`
-- `POST /trading/create-oco`
-- `GET /trading/list-oco`
-- `DELETE /trading/cancel-oco`
-- `GET /trading/order-rate-limit`
-- `GET /trading/commission-rate`
-- `POST /trading/cancel-replace`
-
-### Coinbase - General
-
-- `GET /coinbase/general/ping`
-- `GET /coinbase/general/time`
-
-### Coinbase - Market
-
-- `GET /coinbase/market/products`
-- `GET /coinbase/market/product`
-- `GET /coinbase/market/product-book`
-- `GET /coinbase/market/ticker`
-- `GET /coinbase/market/candles`
-
-### Coinbase - Account (privadas)
-
-- `GET /coinbase/account/accounts`
-- `GET /coinbase/account/account`
-
-### Coinbase - Trading (privadas)
-
-- `POST /coinbase/trading/create-order`
-- `POST /coinbase/trading/cancel-order`
-- `GET /coinbase/trading/get-order`
-- `GET /coinbase/trading/list-orders`
-
-## Padrao de resposta
-
-Sucesso:
-
-```json
-{
-  "success": true,
-  "data": {}
-}
-```
-
-Erro:
-
-```json
-{
-  "success": false,
-  "error": "mensagem"
-}
-```
-
-## Autenticacao e seguranca
-
-- Basic Auth global opcional via `.env`:
-- `BASIC_AUTH_USER`
-- `BASIC_AUTH_PASSWORD`
-- Rotas privadas exigem credenciais da exchange (Binance/Coinbase).
-
-## Variaveis de ambiente importantes
-
-Veja `api/.env.example`.
-
-Principais:
-
-- Binance: `BINANCE_API_KEY`, `BINANCE_SECRET_KEY`
-- Coinbase: `COINBASE_API_KEY`, `COINBASE_API_SECRET`, `COINBASE_KEY_FILE`
-- Rate limit: `RATE_LIMIT_ENABLED`, `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`
-- Logs: `APP_LOG_FILE`, `APP_DEBUG`
-- Metrics: `METRICS_ENABLED`
-
-## Testes e qualidade (API)
-
-```bash
-cd api
 composer test
 composer stan
 ```
 
-## Colecao Insomnia
+### Frontend
 
-- `api/insomnia.json`
+```bash
+cd web
+pnpm install
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm build
+```
 
-## Banco de dados (status)
+## Smoke test manual
 
-Existe camada de banco em:
+Com API no ar (`http://localhost:8080/api`):
 
-- `api/src/Database/*`
-- `api/sql/*`
+```bash
+# Infra
+curl -i http://localhost:8080/api/health
+curl -i http://localhost:8080/api/metrics
 
-No estado atual, essa camada esta disponivel no codigo, mas nao e o fluxo principal das rotas da API.
+# Binance publicos
+curl -i http://localhost:8080/api/general/ping
+curl -i "http://localhost:8080/api/market/ticker?symbol=BTCUSDT"
 
-## Proximos passos sugeridos
+# Coinbase publicos
+curl -i http://localhost:8080/api/coinbase/general/time
+curl -i "http://localhost:8080/api/coinbase/market/product?product_id=BTC-USD"
+```
 
-1. Ajustar `api/docker-compose.yml` para subir somente servicos existentes.
-2. Criar frontend dentro de `web/` (ou apontar compose para projeto frontend real).
-3. Adicionar autenticacao de aplicacao (alem das chaves de exchange), se necessario para producao.
-4. Documentar exemplos de request/response por endpoint em uma seccao de API reference.
+Para endpoints privados, inclua Basic Auth (se habilitado) e credenciais da exchange no request.
+
+## Estrutura util
+
+- Backend entrypoint: `api/index.php`
+- Router: `api/src/Router.php`
+- Clients: `api/src/BinanceClient.php`, `api/src/CoinbaseClient.php`
+- Front API client: `web/lib/api-client.ts`
+- Dashboard pages: `web/app/(dashboard)/*`

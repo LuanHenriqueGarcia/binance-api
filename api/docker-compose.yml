@@ -3,18 +3,33 @@ services:
   app:
     build: .
     container_name: binance-php-app
+    depends_on:
+      - db
     volumes:
       - .:/var/www/html
       - ./storage:/var/www/html/storage
     environment:
       APP_ENV: development
+      DB_DRIVER: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: binance_api
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
     ports:
       - "8080:8080"
 
-  # front:
-  #   build: ./binance-front
-  #   container_name: binance-php-front
-  #   depends_on:
-  #     - app
-  #   ports:
-  #     - "5173:80"
+  db:
+    image: postgres:16-alpine
+    container_name: binance-php-db
+    environment:
+      POSTGRES_DB: binance_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -91,7 +91,6 @@ export async function apiClient<T = unknown>(
     const res = await fetch(finalUrl, {
       method,
       headers,
-      credentials: 'include',
       body: finalBody && method !== 'GET' ? JSON.stringify(finalBody) : undefined,
     })
 

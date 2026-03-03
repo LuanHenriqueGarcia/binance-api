@@ -66,6 +66,14 @@ class Router
      */
     public function dispatch(): void
     {
+        $this->applyCorsHeaders();
+
+        if ($this->method === 'OPTIONS') {
+            http_response_code(204);
+            header('X-Request-Id: ' . Config::getRequestId());
+            return;
+        }
+
         if (!$this->checkAuth()) {
             return;
         }
@@ -429,5 +437,50 @@ class Router
         }
         $duration = (int)((microtime(true) - ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000);
         Metrics::record($status, $duration);
+    }
+
+    private function applyCorsHeaders(): void
+    {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $allowedOrigins = $this->parseCsv((string) Config::get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'));
+        $allowedHeaders = implode(', ', $this->parseCsv(
+            (string) Config::get('CORS_ALLOWED_HEADERS', 'Authorization, Content-Type, X-Correlation-Id')
+        ));
+        $allowedMethods = implode(', ', $this->parseCsv(
+            (string) Config::get('CORS_ALLOWED_METHODS', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        ));
+
+        $allowOrigin = $this->resolveAllowedOrigin($origin, $allowedOrigins);
+
+        header('Access-Control-Allow-Origin: ' . $allowOrigin);
+        header('Vary: Origin');
+        header('Access-Control-Allow-Methods: ' . $allowedMethods);
+        header('Access-Control-Allow-Headers: ' . $allowedHeaders);
+        header('Access-Control-Max-Age: 86400');
+    }
+
+    /**
+     * @param array<int,string> $allowedOrigins
+     */
+    private function resolveAllowedOrigin(string $origin, array $allowedOrigins): string
+    {
+        if (in_array('*', $allowedOrigins, true)) {
+            return '*';
+        }
+
+        if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
+            return $origin;
+        }
+
+        return $allowedOrigins[0] ?? 'http://localhost:3000';
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function parseCsv(string $value): array
+    {
+        $items = array_map('trim', explode(',', $value));
+        return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
     }
 }
